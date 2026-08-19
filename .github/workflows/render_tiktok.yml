@@ -8,6 +8,11 @@ name: Render TikTok Video
 #   `permissions: contents: write` が必要（補完が不要なレコードでは書き込みは発生しない）。
 # - 動画素材は空想ロマンス公式チャンネルの既知動画のみに限定される
 #   (詳細は src/video/fetcher.py を参照)。
+# - GitHub Actionsのランナー(データセンターIP)からの素の取得はYouTube側の
+#   bot判定("Sign in to confirm you're not a bot")に阻まれるため、任意で
+#   YOUTUBE_COOKIES シークレット（ログイン済みブラウザから書き出した
+#   Netscape形式cookies.txtの中身）を設定するとcookie認証を使う。
+#   未設定でも動作するが、その場合YouTube側のブロック次第で素材取得に失敗しうる。
 # - 生成された動画は大容量のためリポジトリへはコミットせず、
 #   このワークフローの Artifacts からダウンロードする。
 on:
@@ -70,6 +75,18 @@ jobs:
           git commit -m "chore: TikTok動画台本のnarration_text/search_keywordsを補完 (content_id=${{ inputs.content_id }})"
           git pull --rebase origin "${{ github.ref_name }}"
           git push origin "HEAD:${{ github.ref_name }}"
+
+      - name: Prepare YouTube cookies (optional)
+        env:
+          YOUTUBE_COOKIES: ${{ secrets.YOUTUBE_COOKIES }}
+        run: |
+          if [ -n "$YOUTUBE_COOKIES" ]; then
+            echo "$YOUTUBE_COOKIES" > "${RUNNER_TEMP}/youtube_cookies.txt"
+            echo "YOUTUBE_COOKIES_FILE=${RUNNER_TEMP}/youtube_cookies.txt" >> "$GITHUB_ENV"
+            echo "YOUTUBE_COOKIES シークレットを使用します。"
+          else
+            echo "YOUTUBE_COOKIES シークレットが未設定のため、cookieなしで実行します。"
+          fi
 
       - name: Render TikTok video
         run: python src/video/render_tiktok.py --content-id "${{ inputs.content_id }}"
