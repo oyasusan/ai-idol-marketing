@@ -24,7 +24,9 @@ from src.db.models import get_connection
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_CONTENT_LIMIT = 100
+# Groq無料枠のTPM(Tokens Per Minute)上限(既定モデルで8,000)に収まるよう、
+# 実測で安定して成功する件数に抑えている。増やす場合はGroqのレート制限に注意すること。
+DEFAULT_CONTENT_LIMIT = 50
 
 
 class WinLossPattern(BaseModel):

@@ -33,9 +33,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run pipeline (collect -> analyze -> generate -> evaluate -> report)
+        # データ収集は youtube-analytics リポジトリの公開DBを取り込む方式のため、
+        # YOUTUBE_API_KEY / YOUTUBE_CHANNEL_ID は不要。
         env:
-          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
-          YOUTUBE_CHANNEL_ID: ${{ secrets.YOUTUBE_CHANNEL_ID }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python src/main.py
 

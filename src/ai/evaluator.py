@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any, Literal, Optional
 
@@ -29,6 +30,10 @@ from src.db.models import get_connection
 logger = logging.getLogger(__name__)
 
 DEFAULT_EVALUATION_LIMIT = 20
+
+# Groq無料枠のTPM(Tokens Per Minute)制限に短時間で連続到達しないよう、
+# 評価対象1件ごとの呼び出しの間に間隔を空ける。
+_INTER_EVALUATION_DELAY_SECONDS = 15
 
 
 class EvaluationResult(BaseModel):
@@ -140,6 +145,10 @@ def evaluate_pending_contents(
         skipped = 0
 
         for row in rows:
+            # 直前のコンテンツ生成呼び出し等でTPM枠を使い切っている可能性があるため、
+            # 1件目の呼び出し前にも間隔を空ける。
+            time.sleep(_INTER_EVALUATION_DELAY_SECONDS)
+
             analysis_id = row["analysis_id"]
             if analysis_id not in win_patterns_cache:
                 win_patterns_cache[analysis_id] = _fetch_win_patterns_text(conn, analysis_id)

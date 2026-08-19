@@ -19,14 +19,22 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import sys
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
+# `python src/main.py` のように直接実行された場合、スクリプトの親ディレクトリ(src/)が
+# sys.path[0] になり、プロジェクトルート直下の config パッケージを解決できない。
+# `python -m src.main` 実行時には不要だが、害はないためどちらの起動方法でも動くようにする。
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(_PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(_PROJECT_ROOT))
+
 from config.settings import DRAFTS_DIR as DEFAULT_DRAFTS_DIR
 from src.ai import analyzer, evaluator, generator
 from src.ai.analyzer import format_patterns_text
-from src.collectors import youtube
+from src.collectors import youtube_analytics_import
 from src.db.models import get_connection
 
 logger = logging.getLogger(__name__)
@@ -193,7 +201,7 @@ def run_pipeline(
     started_at = datetime.now(timezone.utc)
     logger.info("=== パイプライン開始: %s ===", run_date.isoformat())
 
-    collect_result = youtube.collect_channel_videos(db_path=db_path)
+    collect_result = youtube_analytics_import.import_from_youtube_analytics(db_path=db_path)
     logger.info("収集結果: %s", collect_result)
 
     analysis_result = analyzer.run_analysis(db_path=db_path)

@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
@@ -38,6 +39,10 @@ ALL_PLATFORMS: tuple[Platform, ...] = (
     Platform.YOUTUBE,
     Platform.NOTE,
 )
+
+# Groq無料枠のTPM(Tokens Per Minute)制限に短時間で連続到達しないよう、
+# プラットフォームごとの呼び出しの間に間隔を空ける。
+_INTER_PLATFORM_DELAY_SECONDS = 15
 
 
 class GeneratedContentItem(BaseModel):
@@ -220,6 +225,10 @@ def generate_contents_for_all_platforms(
         draft_paths: list[str] = []
 
         for platform in platforms:
+            # 直前の分析呼び出し等でTPM枠を使い切っている可能性があるため、
+            # 1件目の呼び出し前にも間隔を空ける。
+            time.sleep(_INTER_PLATFORM_DELAY_SECONDS)
+
             result = generate_for_platform(
                 analysis_row,
                 platform,

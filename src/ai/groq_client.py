@@ -38,6 +38,12 @@ DEFAULT_TEMPERATURE = 0.7
 DEFAULT_MAX_RETRIES = 2  # 合計試行回数
 _RETRY_BACKOFF_SECONDS = 1.5
 
+# openai/gpt-oss系などの推論モデルは、reasoning_effortを指定しないと
+# 内部思考(<think>等)だけでcompletion_tokensの上限を使い切り、
+# 最終的なJSON本文が空のまま返る（Groq側でJSON検証エラーになる）ことがある。
+# 本プロジェクトの用途では深い推論は不要なため既定で低めに固定する。
+DEFAULT_REASONING_EFFORT: Optional[str] = "low"
+
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 
@@ -91,11 +97,16 @@ def generate_json(
     temperature: float = DEFAULT_TEMPERATURE,
     max_retries: int = DEFAULT_MAX_RETRIES,
     api_key: Optional[str] = None,
+    reasoning_effort: Optional[str] = DEFAULT_REASONING_EFFORT,
 ) -> Optional[SchemaT | dict]:
     """Groq APIを呼び出し、構造化JSONを取得する。
 
     `response_schema` にpydanticモデルを渡すとそのインスタンスを返す（バリデーション込み）。
     未指定の場合は `dict` を返す。
+
+    `reasoning_effort` は openai/gpt-oss系などの推論モデル向けのGroq拡張パラメータ。
+    非対応モデルに渡しても無視される想定のため、常に付与して問題ない。不要な場合は
+    明示的に `None` を渡す。
 
     APIエラー・JSONパース失敗・スキーマ不一致など、いかなる異常時も例外を送出せず
     ログ出力の上で `None` を返す。
@@ -105,6 +116,8 @@ def generate_json(
     if client is None:
         return None
 
+    extra_body = {"reasoning_effort": reasoning_effort} if reasoning_effort else {}
+
     last_error: Optional[Exception] = None
     for attempt in range(1, max_retries + 1):
         try:
@@ -113,6 +126,7 @@ def generate_json(
                 messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 response_format={"type": "json_object"},
+                extra_body=extra_body,
             )
             return _parse_response(response, response_schema)
         except APIError as exc:

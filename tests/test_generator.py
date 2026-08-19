@@ -19,6 +19,8 @@ def db_path(tmp_path):
 def drafts_dir(tmp_path, monkeypatch):
     path = tmp_path / "drafts"
     monkeypatch.setattr("src.ai.generator.DRAFTS_DIR", path)
+    # プラットフォーム間のレート制限用ウェイトはテストでは待たない
+    monkeypatch.setattr("src.ai.generator.time.sleep", lambda *_: None)
     return path
 
 
@@ -26,7 +28,7 @@ def _insert_analysis(conn):
     cursor = conn.execute(
         """
         INSERT INTO ai_analyses (model_name, summary, win_patterns, loss_patterns)
-        VALUES ('llama-3.3-70b-versatile', 'テスト要約', '[]', '[]')
+        VALUES ('openai/gpt-oss-20b', 'テスト要約', '[]', '[]')
         """
     )
     conn.commit()

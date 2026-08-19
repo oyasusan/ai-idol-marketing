@@ -24,7 +24,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 from config.settings import settings
-from src.db.models import Content, get_connection
+from src.db.models import Content, get_connection, upsert_content
 
 logger = logging.getLogger(__name__)
 
@@ -172,44 +172,6 @@ def _to_content(video: dict[str, Any]) -> Optional[Content]:
         return None
 
 
-def _upsert_content(conn: sqlite3.Connection, content: Content) -> None:
-    conn.execute(
-        """
-        INSERT INTO contents (
-            id, title, description, published_at, channel_id, duration_seconds,
-            thumbnail_url, tags, view_count, like_count, comment_count,
-            collected_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-        ON CONFLICT(id) DO UPDATE SET
-            title = excluded.title,
-            description = excluded.description,
-            published_at = excluded.published_at,
-            channel_id = excluded.channel_id,
-            duration_seconds = excluded.duration_seconds,
-            thumbnail_url = excluded.thumbnail_url,
-            tags = excluded.tags,
-            view_count = excluded.view_count,
-            like_count = excluded.like_count,
-            comment_count = excluded.comment_count,
-            collected_at = datetime('now'),
-            updated_at = datetime('now')
-        """,
-        (
-            content.id,
-            content.title,
-            content.description,
-            content.published_at,
-            content.channel_id,
-            content.duration_seconds,
-            content.thumbnail_url,
-            content.tags,
-            content.view_count,
-            content.like_count,
-            content.comment_count,
-        ),
-    )
-
-
 def collect_channel_videos(
     channel_id: Optional[str] = None,
     api_key: Optional[str] = None,
@@ -249,7 +211,7 @@ def collect_channel_videos(
     conn = get_connection(db_path)
     try:
         for content in contents:
-            _upsert_content(conn, content)
+            upsert_content(conn, content)
             upserted += 1
         conn.commit()
     except sqlite3.Error:

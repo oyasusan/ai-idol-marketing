@@ -28,7 +28,7 @@ def test_run_pipeline_full_success_writes_report(monkeypatch, db_path, drafts_di
     conn.execute(
         """
         INSERT INTO ai_analyses (id, summary, win_patterns, loss_patterns, model_name)
-        VALUES (1, 'テスト分析サマリー', ?, ?, 'llama-3.3-70b-versatile')
+        VALUES (1, 'テスト分析サマリー', ?, ?, 'openai/gpt-oss-20b')
         """,
         (
             json.dumps([{"pattern": "テキストサムネ", "evidence": "再生数2倍", "supporting_video_ids": ["v1"]}]),
@@ -48,7 +48,7 @@ def test_run_pipeline_full_success_writes_report(monkeypatch, db_path, drafts_di
     conn.close()
 
     monkeypatch.setattr(
-        "src.main.youtube.collect_channel_videos",
+        "src.main.youtube_analytics_import.import_from_youtube_analytics",
         lambda db_path=None: {"fetched": 1, "upserted": 1, "video_ids": ["v1"], "ok": True},
     )
     monkeypatch.setattr(
@@ -103,7 +103,7 @@ def test_run_pipeline_full_success_writes_report(monkeypatch, db_path, drafts_di
 
 def test_run_pipeline_analysis_failure_skips_generation(monkeypatch, db_path, drafts_dir):
     monkeypatch.setattr(
-        "src.main.youtube.collect_channel_videos",
+        "src.main.youtube_analytics_import.import_from_youtube_analytics",
         lambda db_path=None: {"fetched": 0, "upserted": 0, "video_ids": [], "ok": False},
     )
     monkeypatch.setattr(

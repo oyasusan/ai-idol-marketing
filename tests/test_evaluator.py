@@ -14,6 +14,12 @@ def db_path(tmp_path):
     return path
 
 
+@pytest.fixture(autouse=True)
+def _no_real_sleep(monkeypatch):
+    # レート制限用ウェイトはテストでは待たない
+    monkeypatch.setattr("src.ai.evaluator.time.sleep", lambda *_: None)
+
+
 def _insert_generated_content(conn, platform="X", body="テスト本文"):
     cursor = conn.execute(
         """
@@ -95,6 +101,7 @@ def test_evaluate_pending_contents_respects_limit(monkeypatch, db_path):
         recommended_status="needs_revision",
     )
     monkeypatch.setattr("src.ai.evaluator.generate_json", lambda *a, **k: fake_result)
+    monkeypatch.setattr("src.ai.evaluator.time.sleep", lambda *_: None)
 
     result = evaluate_pending_contents(limit=2, db_path=db_path)
     assert result == {"ok": True, "evaluated": 2, "skipped": 0}

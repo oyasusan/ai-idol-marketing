@@ -169,6 +169,50 @@ def init_db(db_path: Optional[Path] = None) -> None:
         conn.close()
 
 
+def upsert_content(conn: sqlite3.Connection, content: Content) -> None:
+    """contents テーブルへ冪等にUPSERTする。
+
+    複数のコレクター（src/collectors/youtube.py, src/collectors/youtube_analytics_import.py）
+    から共通で利用される。
+    """
+
+    conn.execute(
+        """
+        INSERT INTO contents (
+            id, title, description, published_at, channel_id, duration_seconds,
+            thumbnail_url, tags, view_count, like_count, comment_count,
+            collected_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+        ON CONFLICT(id) DO UPDATE SET
+            title = excluded.title,
+            description = excluded.description,
+            published_at = excluded.published_at,
+            channel_id = excluded.channel_id,
+            duration_seconds = excluded.duration_seconds,
+            thumbnail_url = excluded.thumbnail_url,
+            tags = excluded.tags,
+            view_count = excluded.view_count,
+            like_count = excluded.like_count,
+            comment_count = excluded.comment_count,
+            collected_at = datetime('now'),
+            updated_at = datetime('now')
+        """,
+        (
+            content.id,
+            content.title,
+            content.description,
+            content.published_at,
+            content.channel_id,
+            content.duration_seconds,
+            content.thumbnail_url,
+            content.tags,
+            content.view_count,
+            content.like_count,
+            content.comment_count,
+        ),
+    )
+
+
 if __name__ == "__main__":
     init_db()
     print(f"[{datetime.now().isoformat(timespec='seconds')}] DB initialized at: {settings.database_path}")

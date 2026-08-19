@@ -5,8 +5,8 @@
 ## 基本技術スタック
 - Python 3.11+
 - SQLite (data/database.sqlite)
-- Groq API (openai SDK互換 / llama-3.3-70b-versatile)
-- YouTube Data API v3
+- Groq API (openai SDK互換 / openai/gpt-oss-20b)
+- youtube-analytics リポジトリ (別リポジトリが収集した公開データを取り込み)
 - GitHub Actions (日次パイプライン)
 
 ## プロジェクト構造

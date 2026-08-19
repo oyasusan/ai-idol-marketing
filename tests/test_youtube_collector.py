@@ -6,11 +6,10 @@ from googleapiclient.errors import HttpError
 
 from src.collectors.youtube import (
     _to_content,
-    _upsert_content,
     collect_channel_videos,
     parse_duration_seconds,
 )
-from src.db.models import get_connection, init_db
+from src.db.models import get_connection, init_db, upsert_content
 
 
 @pytest.mark.parametrize(
@@ -94,7 +93,7 @@ def test_upsert_is_idempotent_and_updates_stats(db_path):
     conn = get_connection(db_path)
     content = _to_content(SAMPLE_VIDEO)
 
-    _upsert_content(conn, content)
+    upsert_content(conn, content)
     conn.commit()
 
     row = conn.execute("SELECT * FROM contents WHERE id = ?", (content.id,)).fetchone()
@@ -104,7 +103,7 @@ def test_upsert_is_idempotent_and_updates_stats(db_path):
     # 同じIDで再実行(再収集)しても行が増えず、実績値のみ更新されることを確認
     content.view_count = 9999
     content.like_count = 999
-    _upsert_content(conn, content)
+    upsert_content(conn, content)
     conn.commit()
 
     count = conn.execute("SELECT COUNT(*) AS c FROM contents").fetchone()["c"]

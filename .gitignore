@@ -1,5 +1,7 @@
 # Environment variables
 .env
+*.swp
+*.swo
 
 # Python
 __pycache__/
