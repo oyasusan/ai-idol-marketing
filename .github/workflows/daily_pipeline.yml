@@ -1,0 +1,56 @@
+name: Daily Pipeline
+
+on:
+  schedule:
+    # 毎日 JST 06:00 に実行 (UTC 21:00 = JST 06:00 の前日分)
+    - cron: "0 21 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+# 手動実行と定期実行が重ならないようにする
+concurrency:
+  group: daily-pipeline
+  cancel-in-progress: false
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pipeline (collect -> analyze -> generate -> evaluate -> report)
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          YOUTUBE_CHANNEL_ID: ${{ secrets.YOUTUBE_CHANNEL_ID }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: python src/main.py
+
+      - name: Commit and push generated DB / reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add data/database.sqlite content/drafts/
+
+          if git diff --staged --quiet; then
+            echo "変更がないためコミットをスキップします。"
+            exit 0
+          fi
+
+          git commit -m "chore: 日次パイプライン自動実行 ($(date -u +'%Y-%m-%d'))"
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"
