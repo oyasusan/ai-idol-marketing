@@ -1,7 +1,7 @@
 {
   "run_date": "2026-08-19",
-  "started_at": "2026-08-19T02:43:11Z",
-  "finished_at": "2026-08-19T02:46:07Z",
+  "started_at": "2026-08-19T03:17:12Z",
+  "finished_at": "2026-08-19T03:20:12Z",
   "collect": {
     "ok": true,
     "fetched": 300,
@@ -311,23 +311,23 @@
   },
   "analysis": {
     "ok": true,
-    "analysis_id": 6,
+    "analysis_id": 7,
     "content_count": 50,
     "win_pattern_count": 2,
     "loss_pattern_count": 2
   },
   "generation": {
     "ok": true,
-    "analysis_id": 6,
+    "analysis_id": 7,
     "generated_count": 6,
     "failed_platforms": [],
     "draft_paths": [
-      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0012_X_post_text.md",
-      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0013_X_post_text.md",
-      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0014_Instagram_post_text.md",
-      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0015_TikTok_video_script.md",
-      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0016_YouTube_video_script.md",
-      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0017_note_article.md"
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0018_X_post_text.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0019_Instagram_post_text.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0020_Instagram_post_text.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0021_TikTok_video_script.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0022_YouTube_video_script.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0023_note_article.md"
     ]
   },
   "evaluation": {
@@ -388,6 +388,40 @@
       "updated_at": "2026-08-19 02:45:20"
     },
     {
+      "id": 19,
+      "analysis_id": 7,
+      "platform": "Instagram",
+      "content_type": "post_text",
+      "title": "かわいい子と目合った♡",
+      "body": "先日撮ったライブの裏側を公開！\n\n- 目合った瞬間に彼女の笑顔がキラリ✨\n- その時のリアクションをゆっくり再現した短編動画を添付\n- みんなのコメントで爆レスが続出！\n\nぜひ見て、あなたの好きな瞬間を教えてください💬\n\n（※動画は未公開の映像を使用しています）\n\n#かわいい子と目合った #ライブ裏側 #爆レス #アイドル好き #ファンの声",
+      "target_persona": "20〜30代のアイドル・音楽ファン、特にライブ映像と感情豊かな瞬間に興味がある人",
+      "evaluation_score": 85.0,
+      "evaluation_reason": "[AI推奨: approved] タイトルと本文が感情的表現と具体的な瞬間を示しており、分析で示された勝ちパターンと整合性が高い。文字数はInstagramの投稿上限内で、ハッシュタグも適切。ターゲット層に対する訴求力も十分。誤解や炎上リスクは低く、事実誤認もない。軽微な改善点としてハッシュタグの多さを調整し、動画の未公開情報を明示する表現をもう少し具体的にすることが推奨される。\n良い点: 感情的表現と具体的瞬間を合わせたタイトル / インスタ向け文字数・フォーマットに適合 / ターゲット層への高い訴求力 / ハッシュタグで拡散効果期待\n懸念点: ハッシュタグが多いとスパム扱いされる可能性 / 動画の「未公開」表記が不明確で誤解を招く恐れ\n改善提案: ハッシュタグを3〜5個に絞り、主要なものに集中する / 動画の未公開表記を「未公開映像を使用」ではなく「未公開映像を使用した短編動画」と明記し、内容を明確にする",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0019_Instagram_post_text.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 03:17:51",
+      "updated_at": "2026-08-19 03:19:09"
+    },
+    {
+      "id": 20,
+      "analysis_id": 7,
+      "platform": "Instagram",
+      "content_type": "post_text",
+      "title": "双葉うゆのかわいい瞬間集",
+      "body": "双葉うゆのライブで見つけた、ほんわかかわいい瞬間を集めました！\n\n- 彼女が手を振るときの照れ笑い\n- ファンと目合ったときの照れ隠し\n- ステージ裏での小さなハプニング\n\n動画は5分ほどにまとめています。ぜひチェックして、コメントでどの瞬間が一番好きか教えてくださいね！\n\n#双葉うゆ #かわいい瞬間 #ライブハイライト #ファンの声 #アイドル動画",
+      "target_persona": "20代前半のアイドル好き、双葉うゆファン、ライブ映像を楽しむ層",
+      "evaluation_score": 85.0,
+      "evaluation_reason": "[AI推奨: approved] タイトルに『双葉うゆ』と感情的表現『かわいい瞬間』が組み合わさっており、分析結果の勝ちパターンに合致。本文は短くインスタの文字数制限に適合し、ハッシュタグも適切。リスクはなし。\n良い点: タイトルが分析で示された勝ちパターンに沿っている / 本文が短く読みやすく、ターゲットのライブ映像好きに訴求 / ハッシュタグで検索性が高い / 炎上・誤解リスクが低い\n改善提案: 動画のリンクや再生時間を明記するとさらに誘導効果が期待できる / コメントを促す文言を少し具体化してエンゲージメントを高める",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0020_Instagram_post_text.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 03:17:51",
+      "updated_at": "2026-08-19 03:19:25"
+    },
+    {
       "id": 4,
       "analysis_id": 4,
       "platform": "TikTok",
@@ -437,6 +471,23 @@
       "reviewed_at": null,
       "created_at": "2026-08-19 02:44:02",
       "updated_at": "2026-08-19 02:45:36"
+    },
+    {
+      "id": 21,
+      "analysis_id": 7,
+      "platform": "TikTok",
+      "content_type": "video_script",
+      "title": "かわいい子と目合った♡",
+      "body": "【0-2秒】\n・カメラに向かって手を振る\n・テロップ「目合った子に大反応！？」\n【2-15秒】\n・本人がカメラに向かって笑顔で話す\n・「最近、かわいい子と目合った瞬間が…」と語り、実際の映像を挿入\n・感情的に「すごく嬉しかった！」と表現\n【15-30秒】\n・クローズアップでリアクションを撮影\n・テロップ「爆レスくれた子が可愛い！」\n【30-45秒】\n・「次も見逃さないでね！」と呼びかけ\n・ハッシュタグ表示\n【45-60秒】\n・CTA：フォロー＆シェアを促す\n・最後に「コメントであなたの目合った瞬間を教えて！」と締める\n\n#かわいい子 #目合った子 #爆レス #アイドル #感情共有",
+      "target_persona": "18〜25歳のアニメ・アイドル好き、SNSで感情共有を重視する女性",
+      "evaluation_score": 80.0,
+      "evaluation_reason": "[AI推奨: approved] タイトルと内容が感情的で具体的な体験を共有する点が勝ちパターンと一致。TikTokの短尺動画に適した構成で、ターゲットの感情共有志向にマッチ。\n良い点: 感情的表現と具体例を盛り込み、視聴者の共感を誘う / 短い構成で視聴者の注意を引きやすい / ハッシュタグでコミュニティ参加を促進 / CTAが明確でフォロワー獲得につながる\n懸念点: 「爆レスくれた子が可愛い！」という表現が過度に期待を煽る可能性がある / ハッシュタグに含まれる「アイドル」が具体的な人物名を示さないため、誤解を招く恐れは低いが、明確な人物名を入れないと差別化が弱い / 内容は実際の体験に基づく表現であることを確認する必要がある\n改善提案: ハッシュタグに具体的なキャラクター名を追加して差別化を図る / 感情表現をもう少し多様化し、視聴者が自分の体験とリンクしやすくする / 実際の映像を挿入する箇所を明示し、視覚的なインパクトを強化",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0021_TikTok_video_script.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 03:18:07",
+      "updated_at": "2026-08-19 03:19:41"
     },
     {
       "id": 7,
@@ -490,6 +541,23 @@
       "updated_at": "2026-08-19 02:45:04"
     },
     {
+      "id": 18,
+      "analysis_id": 7,
+      "platform": "X",
+      "content_type": "post_text",
+      "title": "かわいい子と目合った♡",
+      "body": "かわいい子と目合った瞬間をシェアします！\n\n【シーン1】\n- 目が合った瞬間の顔をゆっくりクローズアップ\n- 背景はシンプルでキャラクターの表情が際立つように\n\n【シーン2】\n- その場面を一瞬だけ再生して、コメントで感想を募集\n\n【シーン3】\n- 画面下部に「爆レスくれたら次の動画で特別企画！」と呼びかける\n\n#かわいい子と目合った #爆レス\n\n#かわいい子と目合った #爆レス",
+      "target_persona": "20代〜30代のアニメ・アイドル好きで、感情的なリアクションに共感できるファン",
+      "evaluation_score": 70.0,
+      "evaluation_reason": "[AI推奨: needs_revision] タイトルと内容が感情的で具体的なシーンを提示しており、勝ちパターンと一致。文字数はXの制限内で問題なし。ターゲットへの訴求力は高いが、同一ハッシュタグの重複や「爆レス」の呼びかけが炎上リスクを少し上げる。\n良い点: 感情的で具体的なタイトルとシーン説明 / ターゲット層に合った呼びかけ / X向けの文字数・フォーマットに適合\n懸念点: 「爆レス」という呼びかけが炎上リスクを伴う可能性 / 同一ハッシュタグの重複が冗長に見える\n改善提案: ハッシュタグを一度だけ記載し、重複を除去。 / 呼びかけを「コメントで感想を募集」程度に留め、過度な刺激表現を緩和。",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0018_X_post_text.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 03:17:35",
+      "updated_at": "2026-08-19 03:18:54"
+    },
+    {
       "id": 5,
       "analysis_id": 4,
       "platform": "YouTube",
@@ -539,6 +607,23 @@
       "reviewed_at": null,
       "created_at": "2026-08-19 02:44:17",
       "updated_at": "2026-08-19 02:45:51"
+    },
+    {
+      "id": 22,
+      "analysis_id": 7,
+      "platform": "YouTube",
+      "content_type": "video_script",
+      "title": "双葉うゆと目合った瞬間♡ かわいいリアクション集",
+      "body": "【0:00-0:05】フック：\n・画面に「目合った瞬間！」と大きく表示し、音声で「みなさん、超かわいい瞬間を見逃さないでください！」\n\n【0:06-0:20】本編①：\n・双葉うゆがファンと目合ったシーンをスローモーションで再生。\n・コメント付きで「かわいい！」と字幕。\n\n【0:21-0:35】本編②：\n・ライブ配信中にファンが爆レスした瞬間を再編集。\n・画面下部に「爆レスで盛り上がる！」と表示。\n\n【0:36-0:45】本編③：\n・双葉うゆが「ありがとう！」とファンに手を振る様子。\n・「感謝の気持ちを込めて」字幕。\n\n【0:46-0:55】CTA：\n・音声で「チャンネル登録と高評価お願いします！」\n・画面に「次の動画もお楽しみに！」と表示。\n\n【0:56-1:00】エンディング：\n・ロゴとSNSリンクを表示。\n\n#双葉うゆ #目合った瞬間 #かわいい #爆レス #ライブ映像",
+      "target_persona": "20〜30代のアニメ・アイドルファン、特に双葉うゆのファン層",
+      "evaluation_score": 84.0,
+      "evaluation_reason": "[AI推奨: approved] タイトルと内容が感情的で具体的な対象（双葉うゆ）を前面に出し、勝ちパターンと一致。フォーマットはYouTube動画スクリプトに適合し、文字数も制限内。ターゲット（20〜30代アニメ・アイドルファン）への訴求力が高い。リスクはほぼ無し。\n良い点: 感情的で具体的なタイトルと内容が勝ちパターンと一致 / YouTube向けの構成（フック・本編・CTA・エンディング）が整っている / ターゲット層への訴求が明確 / ハッシュタグで検索性を高めている\n懸念点: ライブ映像の編集に関して著作権やプライバシーに注意が必要 / ファンのコメントを使用する場合は許可確認が必要\n改善提案: ライブ映像使用時の権利確認を明記 / ファンコメントの使用許可取得状況を記載 / ハッシュタグは1〜2個に絞ることで見やすさを向上",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0022_YouTube_video_script.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 03:18:22",
+      "updated_at": "2026-08-19 03:19:56"
     },
     {
       "id": 2,
@@ -607,6 +692,23 @@
       "reviewed_at": null,
       "created_at": "2026-08-19 02:44:33",
       "updated_at": "2026-08-19 02:46:07"
+    },
+    {
+      "id": 23,
+      "analysis_id": 7,
+      "platform": "note",
+      "content_type": "article",
+      "title": "{{タイトル}}",
+      "body": "【ファンの皆さんへ】\n\n先日、{{イベント名}}で皆さんとお会いできた瞬間、まるで星が降るような感動を共有したいと思います。会場で見た瞬間、私の心は「かわいい子と目合った♡」という言葉に溢れました。これまでの活動の中で、特にこの瞬間がどれほど大切かを、写真や動画を交えてご紹介します。\n\n1. **会場の雰囲気**\n   - 期待と興奮が混ざり合う空気。\n   - ファンの皆さんの笑顔が、私のエネルギー源。\n\n2. **私の思い出の瞬間**\n   - 目合った瞬間の詳細。\n   - その時感じた「爆レスくれた子かわいい」感覚。\n\n3. **今後の展望**\n   - 次のイベントへの期待。\n   - 皆さんの声を取り入れた新しい企画。\n\nぜひ、この記事を読んで、次回のイベントで一緒に「かわいい」瞬間を作りましょう！\n\n（※画像・動画は別途添付予定です。）\n\n#かわいい瞬間 #ファンと一緒に #次回イベント",
+      "target_persona": "20〜30代のアニメ・アイドルファン、SNSで情報収集が多い女性",
+      "evaluation_score": 70.0,
+      "evaluation_reason": "[AI推奨: needs_revision] 内容は感情的な表現と具体的なイベントの詳細を含み、ターゲット層の興味に合致している。タイトルの「かわいい子と目合った♡」というフレーズは勝ちパターンと一致し、エンゲージメントが期待できる。しかし、いくつかの表現が過度に感情的で曖昧（例：『爆レスくれた子かわいい』）や、ファンの「目合った瞬間」の描写が具体性に欠ける点が軽微な修正の余地がある。\n良い点: 感情的な表現と具体的なイベント描写で共感を誘う / ターゲット層に適した語彙とトーン / 画像・動画の添付予定で視覚的訴求力が高い\n懸念点: 「爆レスくれた子かわいい」などの曖昧表現が誤解を招く可能性 / ファンへの過度な期待感が実際と差が出ると不満につながる恐れ / 一部の表現がブランドトーンから逸脱している可能性\n改善提案: 具体的なエピソードや感情をより詳細に描写し、曖昧さを減らす / 表現の過度な感情的強調を控え、事実ベースの記述を増やす / タイトルや本文でのキーワードを統一し、SEO効果を高める",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0023_note_article.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 03:18:38",
+      "updated_at": "2026-08-19 03:20:12"
     }
   ]
 }
