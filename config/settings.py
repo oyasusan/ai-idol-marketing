@@ -32,6 +32,12 @@ class Settings(BaseSettings):
     youtube_api_key: str = Field(default="", alias="YOUTUBE_API_KEY")
     youtube_channel_id: str = Field(default="", alias="YOUTUBE_CHANNEL_ID")
 
+    # 任意: src/video/fetcher.py がyt-dlpでYouTube動画を取得する際に使う
+    # Netscape形式のcookieファイルへのパス。GitHub Actions等のデータセンターIPからの
+    # アクセスがYouTubeのbot判定("Sign in to confirm you're not a bot")に引っかかる場合の
+    # 追加対策として任意で使用する。未設定でも動作する。
+    youtube_cookies_file: str = Field(default="", alias="YOUTUBE_COOKIES_FILE")
+
     # 空想ロマンスのYouTube実績データを収集している別リポジトリの公開DBファイル
     youtube_analytics_db_url: str = Field(
         default="https://raw.githubusercontent.com/oyasusan/youtube-analytics/main/data/youtube_analytics.db",

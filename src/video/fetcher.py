@@ -30,7 +30,7 @@ from typing import Any, Optional
 
 import yt_dlp
 
-from config.settings import DATA_DIR
+from config.settings import DATA_DIR, settings
 from src.db.models import get_connection
 
 logger = logging.getLogger(__name__)
@@ -47,6 +47,25 @@ DEFAULT_MIN_HEIGHT = 1080
 DEFAULT_MAX_CLIPS = 2
 # メタデータ確認の母数（フィルタで脱落する分を見込み max_clips より多めに検討する）
 _CANDIDATE_POOL_SIZE = 8
+
+# GitHub Actions等のデータセンターIPからの素の"web"クライアントとしてのアクセスは
+# YouTube側のbot判定("Sign in to confirm you're not a bot")に引っかかりやすい。
+# android/iosクライアントを装うとPO Token等の追加検証を要求されにくいため、
+# それらを優先的に試し、失敗時のみwebにフォールバックする。
+_YOUTUBE_PLAYER_CLIENTS = ["android", "ios", "web"]
+
+
+def _common_ydl_opts() -> dict[str, Any]:
+    opts: dict[str, Any] = {
+        "extractor_args": {"youtube": {"player_client": _YOUTUBE_PLAYER_CLIENTS}},
+    }
+    # 認証済みブラウザから書き出したcookieファイル（Netscape形式）が
+    # 環境変数で指定されていれば併用する（bot判定回避の効果が最も高い）。
+    # 未設定でも動作に支障はない（任意設定）。
+    cookies_file = settings.youtube_cookies_file
+    if cookies_file and Path(cookies_file).is_file():
+        opts["cookiefile"] = cookies_file
+    return opts
 
 
 def get_ffmpeg_location() -> Optional[str]:
@@ -102,7 +121,9 @@ def probe_video_metadata(
 ) -> Optional[dict[str, Any]]:
     """ダウンロードせずに動画のメタデータ（長さ・チャンネルID等）のみ取得する。"""
 
-    opts: dict[str, Any] = {"quiet": True, "no_warnings": True, "skip_download": True}
+    opts: dict[str, Any] = {
+        "quiet": True, "no_warnings": True, "skip_download": True, **_common_ydl_opts(),
+    }
     if ffmpeg_location:
         opts["ffmpeg_location"] = ffmpeg_location
 
@@ -155,6 +176,7 @@ def download_video(
         ),
         "outtmpl": str(dest_dir / "%(id)s.%(ext)s"),
         "merge_output_format": "mp4",
+        **_common_ydl_opts(),
     }
     if ffmpeg_location:
         opts["ffmpeg_location"] = ffmpeg_location
