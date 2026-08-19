@@ -1,15 +1,16 @@
 name: Daily Pipeline
 
+# スケジュール実行はGitHub Actionsのネイティブcron(`schedule:`)を使わず、
+# cron-job.org からのHTTPリクエストで `workflow_dispatch` を呼び出す方式にしている。
+# GitHub Actionsの `schedule:` はプラットフォーム側の負荷により実行時刻が
+# 数分〜数十分ずれることがあるため、定時実行の精度を優先してこの構成にした。
 on:
-  schedule:
-    # 毎日 JST 06:00 に実行 (UTC 21:00 = JST 06:00 の前日分)
-    - cron: "0 21 * * *"
   workflow_dispatch: {}
 
 permissions:
   contents: write
 
-# 手動実行と定期実行が重ならないようにする
+# 手動実行と外部トリガーによる実行が重ならないようにする
 concurrency:
   group: daily-pipeline
   cancel-in-progress: false
