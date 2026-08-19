@@ -51,19 +51,32 @@ _CANDIDATE_POOL_SIZE = 8
 # GitHub Actions等のデータセンターIPからの素の"web"クライアントとしてのアクセスは
 # YouTube側のbot判定("Sign in to confirm you're not a bot")に引っかかりやすい。
 # android/iosクライアントを装うとPO Token等の追加検証を要求されにくいため、
-# それらを優先的に試し、失敗時のみwebにフォールバックする。
-_YOUTUBE_PLAYER_CLIENTS = ["android", "ios", "web"]
+# cookie未設定時のフォールバックとして残す。ただしandroid/iosクライアントは
+# 認証済みcookieを正しく扱えず"Requested format is not available"を起こすことが
+# あるため、cookie設定時はwebを優先する。
+_YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES = ["web", "android", "ios"]
+_YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES = ["android", "ios", "web"]
 
 
 def _common_ydl_opts() -> dict[str, Any]:
-    opts: dict[str, Any] = {
-        "extractor_args": {"youtube": {"player_client": _YOUTUBE_PLAYER_CLIENTS}},
-    }
     # 認証済みブラウザから書き出したcookieファイル（Netscape形式）が
     # 環境変数で指定されていれば併用する（bot判定回避の効果が最も高い）。
     # 未設定でも動作に支障はない（任意設定）。
     cookies_file = settings.youtube_cookies_file
-    if cookies_file and Path(cookies_file).is_file():
+    has_cookies = bool(cookies_file and Path(cookies_file).is_file())
+
+    opts: dict[str, Any] = {
+        "extractor_args": {
+            "youtube": {
+                "player_client": (
+                    _YOUTUBE_PLAYER_CLIENTS_WITH_COOKIES
+                    if has_cookies
+                    else _YOUTUBE_PLAYER_CLIENTS_WITHOUT_COOKIES
+                )
+            }
+        },
+    }
+    if has_cookies:
         opts["cookiefile"] = cookies_file
     return opts
 
@@ -122,7 +135,14 @@ def probe_video_metadata(
     """ダウンロードせずに動画のメタデータ（長さ・チャンネルID等）のみ取得する。"""
 
     opts: dict[str, Any] = {
-        "quiet": True, "no_warnings": True, "skip_download": True, **_common_ydl_opts(),
+        "quiet": True,
+        "no_warnings": True,
+        "skip_download": True,
+        # メタデータ確認のみが目的でダウンロード可能な形式は不要なため、
+        # 該当クライアントでダウンロード用フォーマットが見つからなくても
+        # 取得済みのduration/channel_id等のメタデータをそのまま返す。
+        "ignore_no_formats_error": True,
+        **_common_ydl_opts(),
     }
     if ffmpeg_location:
         opts["ffmpeg_location"] = ffmpeg_location
