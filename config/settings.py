@@ -28,7 +28,8 @@ class Settings(BaseSettings):
 
     youtube_api_key: str = Field(default="", alias="YOUTUBE_API_KEY")
     youtube_channel_id: str = Field(default="", alias="YOUTUBE_CHANNEL_ID")
-    gemini_api_key: str = Field(default="", alias="GEMINI_API_KEY")
+    groq_api_key: str = Field(default="", alias="GROQ_API_KEY")
+    groq_model: str = Field(default="llama-3.3-70b-versatile", alias="GROQ_MODEL")
 
     database_path: Path = DATA_DIR / "database.sqlite"
 

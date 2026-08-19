@@ -2,7 +2,7 @@
 事前評価モジュール。
 
 `generated_contents` テーブルの未評価レコード（`evaluation_score IS NULL`）を対象に、
-Gemini APIで投稿前チェック観点のスコアリングを行い、結果を同テーブルへ保存する。
+Groq APIで投稿前チェック観点のスコアリングを行い、結果を同テーブルへ保存する。
 
 この評価はあくまで人間の承認判断を補助する参考情報であり、
 `status`（承認ステータス）は本モジュールでは一切変更しない
@@ -23,7 +23,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, Field
 
 from src.ai.analyzer import format_patterns_text
-from src.ai.gemini_client import DEFAULT_MODEL, build_prompt, generate_json
+from src.ai.groq_client import DEFAULT_MODEL, build_prompt, generate_json
 from src.db.models import get_connection
 
 logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ def evaluate_content(
     win_patterns_text: str,
     model: str = DEFAULT_MODEL,
 ) -> Optional[EvaluationResult]:
-    """1件の生成コンテンツをGemini APIで事前評価する。"""
+    """1件の生成コンテンツをGroq APIで事前評価する。"""
 
     prompt = build_prompt(
         "evaluation_prompt",
@@ -90,7 +90,7 @@ def evaluate_content(
     result = generate_json(prompt, response_schema=EvaluationResult, model=model)
     if result is None:
         logger.error(
-            "Gemini APIから有効な評価結果を取得できませんでした。content_id=%s",
+            "Groq APIから有効な評価結果を取得できませんでした。content_id=%s",
             content_row["id"],
         )
     return result

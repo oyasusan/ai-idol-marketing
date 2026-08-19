@@ -1,8 +1,8 @@
 <!--
 用途: 分析結果(勝ち・負けパターン)を踏まえ、指定プラットフォーム向けの集客コンテンツ案を生成する。
-呼び出し元: src/ai/generator.py (実装予定) が gemini_client.build_prompt("generation_prompt", ...) 経由で使用する想定。
+呼び出し元: src/ai/generator.py が groq_client.build_prompt("generation_prompt", ...) 経由で使用する。
 生成物は必ず人間の承認を経てから投稿される（本システムはSNSへの自動投稿を行わない）。
-プレースホルダーは {{変数名}} 形式。src/ai/gemini_client.py の render_prompt() が置換する。
+プレースホルダーは {{変数名}} 形式。src/ai/groq_client.py の render_prompt() が置換する。
 -->
 
 # 役割

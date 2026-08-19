@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS ai_analyses (
     win_patterns TEXT,                      -- 勝ちパターン (Markdown/JSON)
     loss_patterns TEXT,                     -- 負けパターン (Markdown/JSON)
     summary TEXT,
-    model_name TEXT NOT NULL,               -- 使用したAIモデル名 (例: gemini-2.5-flash)
+    model_name TEXT NOT NULL,               -- 使用したAIモデル名 (例: llama-3.3-70b-versatile)
     raw_response TEXT,                      -- 監査用の生レスポンス
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

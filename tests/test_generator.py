@@ -26,7 +26,7 @@ def _insert_analysis(conn):
     cursor = conn.execute(
         """
         INSERT INTO ai_analyses (model_name, summary, win_patterns, loss_patterns)
-        VALUES ('gemini-2.5-flash', 'テスト要約', '[]', '[]')
+        VALUES ('llama-3.3-70b-versatile', 'テスト要約', '[]', '[]')
         """
     )
     conn.commit()

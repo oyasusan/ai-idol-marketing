@@ -28,7 +28,7 @@ def test_run_pipeline_full_success_writes_report(monkeypatch, db_path, drafts_di
     conn.execute(
         """
         INSERT INTO ai_analyses (id, summary, win_patterns, loss_patterns, model_name)
-        VALUES (1, 'テスト分析サマリー', ?, ?, 'gemini-2.5-flash')
+        VALUES (1, 'テスト分析サマリー', ?, ?, 'llama-3.3-70b-versatile')
         """,
         (
             json.dumps([{"pattern": "テキストサムネ", "evidence": "再生数2倍", "supporting_video_ids": ["v1"]}]),

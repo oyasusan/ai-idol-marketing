@@ -1,8 +1,8 @@
 <!--
 用途: 生成済みのコンテンツ案を、人間の承認プロセスに入る前にAIが事前評価する。
-呼び出し元: src/ai/evaluator.py (実装予定) が gemini_client.build_prompt("evaluation_prompt", ...) 経由で使用する想定。
+呼び出し元: src/ai/evaluator.py が groq_client.build_prompt("evaluation_prompt", ...) 経由で使用する。
 このスコアはあくまで参考情報であり、最終的な承認/却下は必ず人間が行う（本システムはSNSへの自動投稿を行わない）。
-プレースホルダーは {{変数名}} 形式。src/ai/gemini_client.py の render_prompt() が置換する。
+プレースホルダーは {{変数名}} 形式。src/ai/groq_client.py の render_prompt() が置換する。
 -->
 
 # 役割

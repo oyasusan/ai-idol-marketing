@@ -1,7 +1,7 @@
 """
 分析モジュール。
 
-`contents` テーブルに蓄積された実績データを取得し、Gemini APIで
+`contents` テーブルに蓄積された実績データを取得し、Groq APIで
 勝ちパターン・負けパターンを抽出して `ai_analyses` テーブルへ保存する。
 
 いかなる異常時（データ不足・API失敗・レスポンス不整合）も例外を送出せず、
@@ -19,7 +19,7 @@ from typing import Any, Optional
 
 from pydantic import BaseModel
 
-from src.ai.gemini_client import DEFAULT_MODEL, build_prompt, generate_json
+from src.ai.groq_client import DEFAULT_MODEL, build_prompt, generate_json
 from src.db.models import get_connection
 
 logger = logging.getLogger(__name__)
@@ -174,7 +174,7 @@ def run_analysis(
 
         result = generate_json(prompt, response_schema=AnalysisResult, model=model)
         if result is None:
-            logger.error("Gemini APIから有効な分析結果を取得できませんでした。")
+            logger.error("Groq APIから有効な分析結果を取得できませんでした。")
             return {"ok": False, "analysis_id": None, "content_count": len(rows),
                      "win_pattern_count": 0, "loss_pattern_count": 0}
 

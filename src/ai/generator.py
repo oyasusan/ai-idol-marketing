@@ -3,7 +3,7 @@
 
 `ai_analyses` の分析結果（勝ちパターン・負けパターン）を根拠として、
 X / Instagram / TikTok / YouTube / note の5プラットフォーム向けに
-投稿文・動画台本などのコンテンツ案をGemini APIで生成する。
+投稿文・動画台本などのコンテンツ案をGroq APIで生成する。
 
 CLAUDE.mdの方針により、SNSへの自動投稿は一切行わない。生成物は
 `generated_contents` テーブルへ `status='pending'` として保存されると同時に、
@@ -26,7 +26,7 @@ from pydantic import BaseModel
 
 from config.settings import DRAFTS_DIR
 from src.ai.analyzer import format_patterns_text
-from src.ai.gemini_client import DEFAULT_MODEL, build_prompt, generate_json
+from src.ai.groq_client import DEFAULT_MODEL, build_prompt, generate_json
 from src.db.models import ContentStatus, Platform, get_connection
 
 logger = logging.getLogger(__name__)
@@ -116,7 +116,7 @@ def _save_generated_content(
     platform: Platform,
     item: GeneratedContentItem,
 ) -> Optional[Path]:
-    # platform列は要求したプラットフォームで確定させる（Geminiの出力ゆれによる
+    # platform列は要求したプラットフォームで確定させる（LLMの出力ゆれによる
     # CHECK制約違反や意図しない値の混入を防ぐため、item.platformは信用しない）
     body = _compose_body(item)
     cursor = conn.execute(
@@ -167,7 +167,7 @@ def generate_for_platform(
     additional_context: str = "",
     model: str = DEFAULT_MODEL,
 ) -> Optional[GenerationResult]:
-    """1プラットフォーム分のコンテンツ案をGemini APIで生成する。"""
+    """1プラットフォーム分のコンテンツ案をGroq APIで生成する。"""
 
     prompt = build_prompt(
         "generation_prompt",
@@ -184,7 +184,7 @@ def generate_for_platform(
 
     result = generate_json(prompt, response_schema=GenerationResult, model=model)
     if result is None:
-        logger.error("Gemini APIから有効な生成結果を取得できませんでした。platform=%s", platform.value)
+        logger.error("Groq APIから有効な生成結果を取得できませんでした。platform=%s", platform.value)
         return None
     return result
 

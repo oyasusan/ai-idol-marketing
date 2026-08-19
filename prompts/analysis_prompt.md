@@ -1,7 +1,7 @@
 <!--
 用途: 収集済みのYouTube動画実績データから「勝ちパターン」「負けパターン」を抽出する。
-呼び出し元: src/ai/analyzer.py (実装予定) が gemini_client.build_prompt("analysis_prompt", ...) 経由で使用する想定。
-プレースホルダーは {{変数名}} 形式。src/ai/gemini_client.py の render_prompt() が置換する。
+呼び出し元: src/ai/analyzer.py が groq_client.build_prompt("analysis_prompt", ...) 経由で使用する。
+プレースホルダーは {{変数名}} 形式。src/ai/groq_client.py の render_prompt() が置換する。
 -->
 
 # 役割

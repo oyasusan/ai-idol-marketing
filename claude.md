@@ -5,7 +5,7 @@
 ## 基本技術スタック
 - Python 3.11+
 - SQLite (data/database.sqlite)
-- Gemini API (google-genai / gemini-2.5-flash)
+- Groq API (openai SDK互換 / llama-3.3-70b-versatile)
 - YouTube Data API v3
 - GitHub Actions (日次パイプライン)
 
@@ -20,7 +20,7 @@
 ├── src/
 │   ├── collectors/      # データ収集 (YouTube API)
 │   ├── db/              # SQLiteモデル・接続
-│   ├── ai/              # Gemini分析・生成・評価ロジック
+│   ├── ai/              # Groq分析・生成・評価ロジック
 │   └── main.py          # エントリーポイント
 └── tests/               # pytest環境
 
