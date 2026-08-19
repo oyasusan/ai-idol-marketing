@@ -57,6 +57,9 @@ class GeneratedContentItem(BaseModel):
     target_persona: Optional[str] = None
     hashtags: list[str] = []
     rationale: Optional[str] = None
+    # 以下2つはTikTok動画台本の場合のみ使用。src/video/ の自動動画生成に使われる。
+    search_keywords: list[str] = []  # 動画素材検索用キーワード
+    narration_text: Optional[str] = None  # シーン指定を含まないTTS読み上げ用テキスト
 
 
 class GenerationResult(BaseModel):
@@ -89,6 +92,8 @@ def _write_draft_file(
     target_persona: Optional[str],
     rationale: Optional[str],
     analysis_id: Optional[int],
+    search_keywords: Optional[list[str]] = None,
+    narration_text: Optional[str] = None,
 ) -> Path:
     DRAFTS_DIR.mkdir(parents=True, exist_ok=True)
     safe_content_type = content_type.replace("/", "_").replace(" ", "_")
@@ -115,6 +120,20 @@ def _write_draft_file(
         rationale or "(なし)",
         "",
     ]
+    if narration_text:
+        lines += [
+            "## ナレーション読み上げテキスト（参考情報）",
+            "",
+            narration_text,
+            "",
+        ]
+    if search_keywords:
+        lines += [
+            "## 動画素材の検索キーワード（参考情報）",
+            "",
+            "\n".join(f"- {kw}" for kw in search_keywords),
+            "",
+        ]
     path.write_text("\n".join(lines), encoding="utf-8")
     return path
 
@@ -128,12 +147,13 @@ def _save_generated_content(
     # platform列は要求したプラットフォームで確定させる（LLMの出力ゆれによる
     # CHECK制約違反や意図しない値の混入を防ぐため、item.platformは信用しない）
     body = _compose_body(item)
+    search_keywords_json = json.dumps(item.search_keywords, ensure_ascii=False) if item.search_keywords else None
     cursor = conn.execute(
         """
         INSERT INTO generated_contents (
             analysis_id, platform, content_type, title, body,
-            target_persona, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            target_persona, status, search_keywords, narration_text
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             analysis_id,
@@ -143,6 +163,8 @@ def _save_generated_content(
             body,
             item.target_persona,
             ContentStatus.PENDING.value,
+            search_keywords_json,
+            item.narration_text,
         ),
     )
     content_id = cursor.lastrowid
@@ -157,6 +179,8 @@ def _save_generated_content(
             target_persona=item.target_persona,
             rationale=item.rationale,
             analysis_id=analysis_id,
+            search_keywords=item.search_keywords,
+            narration_text=item.narration_text,
         )
     except OSError:
         logger.exception("ドラフトファイルの書き込みに失敗しました。content_id=%s", content_id)

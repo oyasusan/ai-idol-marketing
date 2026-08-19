@@ -23,6 +23,10 @@ venv/
 *.log
 
 # data/ 配下は基本無視するが、database.sqlite はバージョン管理対象とする
+# (data/raw_assets/downloads, data/raw_assets/bgm もここに含まれ除外される)
 data/*
 !data/database.sqlite
 !data/.gitkeep
+
+# 生成されたTikTok動画ファイルは大容量のためコミット対象外とする
+content/videos/*.mp4

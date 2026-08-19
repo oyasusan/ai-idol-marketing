@@ -15,6 +15,7 @@ DATA_DIR = BASE_DIR / "data"
 REPORTS_DIR = BASE_DIR / "reports"
 DRAFTS_DIR = BASE_DIR / "content" / "drafts"
 PROMPTS_DIR = BASE_DIR / "prompts"
+VIDEOS_DIR = BASE_DIR / "content" / "videos"
 
 
 class Settings(BaseSettings):

@@ -83,6 +83,8 @@ CREATE TABLE IF NOT EXISTS generated_contents (
     actual_comment_count INTEGER,
     actual_impression_count INTEGER,
     actual_result_recorded_at TEXT,
+    search_keywords TEXT,                   -- TikTok動画素材検索用キーワード(JSON配列文字列)
+    narration_text TEXT,                    -- TikTok動画のTTSナレーション用クリーンテキスト
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -119,6 +121,8 @@ CREATE TABLE generated_contents (
     actual_comment_count INTEGER,
     actual_impression_count INTEGER,
     actual_result_recorded_at TEXT,
+    search_keywords TEXT,                   -- TikTok動画素材検索用キーワード(JSON配列文字列)
+    narration_text TEXT,                    -- TikTok動画のTTSナレーション用クリーンテキスト
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -211,6 +215,8 @@ class GeneratedContent(BaseModel):
     actual_comment_count: Optional[int] = None
     actual_impression_count: Optional[int] = None
     actual_result_recorded_at: Optional[str] = None
+    search_keywords: Optional[str] = None  # JSON配列文字列（TikTok動画素材検索用）
+    narration_text: Optional[str] = None  # TikTok動画のTTSナレーション用クリーンテキスト
 
 
 def get_connection(db_path: Optional[Path] = None) -> sqlite3.Connection:
@@ -231,6 +237,22 @@ def _needs_generated_contents_migration(conn: sqlite3.Connection) -> bool:
     return "actual_view_count" not in columns
 
 
+def _add_missing_simple_columns(conn: sqlite3.Connection) -> None:
+    """CHECK制約の変更を伴わない単純なカラム追加は ALTER TABLE ADD COLUMN で対応する。
+
+    （_needs_generated_contents_migration によるテーブル再作成が既に完了しており、
+    かつその後に追加されたカラムが無い既存DB向けの、より軽量な移行経路）
+    """
+
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(generated_contents)")}
+    if not columns:
+        return  # テーブル未作成。SCHEMA_SQL側のCREATE TABLEで新スキーマが作られる。
+    if "search_keywords" not in columns:
+        conn.execute("ALTER TABLE generated_contents ADD COLUMN search_keywords TEXT")
+    if "narration_text" not in columns:
+        conn.execute("ALTER TABLE generated_contents ADD COLUMN narration_text TEXT")
+
+
 def init_db(db_path: Optional[Path] = None) -> None:
     """テーブルが存在しなければ作成する（冪等）。
 
@@ -246,6 +268,7 @@ def init_db(db_path: Optional[Path] = None) -> None:
         if _needs_generated_contents_migration(conn):
             conn.executescript(_MIGRATE_GENERATED_CONTENTS_SQL)
         conn.executescript(SCHEMA_SQL)
+        _add_missing_simple_columns(conn)
         conn.commit()
     finally:
         conn.close()

@@ -192,4 +192,78 @@ def test_migration_is_a_noop_when_already_migrated(tmp_path):
     conn = get_connection(db_path)
     columns = {row["name"] for row in conn.execute("PRAGMA table_info(generated_contents)")}
     assert "actual_view_count" in columns
+    assert "search_keywords" in columns
+    conn.close()
+
+
+def test_new_db_has_search_keywords_column(tmp_path):
+    db_path = tmp_path / "new.sqlite"
+    init_db(db_path)
+    conn = get_connection(db_path)
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(generated_contents)")}
+    assert "search_keywords" in columns
+    conn.close()
+
+
+def test_migration_adds_search_keywords_via_alter_table_when_level4_already_applied(tmp_path):
+    """actual_view_count等(LEVEL4)は既にあるが search_keywords が無いDBに対しては、
+    テーブル再作成ではなく軽量な ALTER TABLE ADD COLUMN で追加されること。"""
+
+    db_path = tmp_path / "level4_only.sqlite"
+    init_db(db_path)  # 最新スキーマで作成した後、search_keywords列を手動で剥がして再現する
+
+    conn = sqlite3.connect(db_path)
+    conn.executescript(
+        """
+        ALTER TABLE generated_contents RENAME TO generated_contents_tmp;
+        CREATE TABLE generated_contents (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            analysis_id INTEGER REFERENCES ai_analyses(id) ON DELETE SET NULL,
+            platform TEXT NOT NULL CHECK (platform IN ('X', 'Instagram', 'TikTok', 'YouTube', 'note')),
+            content_type TEXT NOT NULL,
+            title TEXT,
+            body TEXT NOT NULL,
+            target_persona TEXT,
+            evaluation_score REAL CHECK (evaluation_score IS NULL OR (evaluation_score BETWEEN 0 AND 100)),
+            evaluation_reason TEXT,
+            status TEXT NOT NULL DEFAULT 'pending'
+                CHECK (status IN ('pending', 'approved', 'rejected', 'needs_revision', 'published')),
+            draft_file_path TEXT,
+            reviewed_by TEXT,
+            reviewed_at TEXT,
+            actual_view_count INTEGER,
+            actual_like_count INTEGER,
+            actual_comment_count INTEGER,
+            actual_impression_count INTEGER,
+            actual_result_recorded_at TEXT,
+            created_at TEXT NOT NULL DEFAULT (datetime('now')),
+            updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+        INSERT INTO generated_contents SELECT
+            id, analysis_id, platform, content_type, title, body, target_persona,
+            evaluation_score, evaluation_reason, status, draft_file_path,
+            reviewed_by, reviewed_at, actual_view_count, actual_like_count,
+            actual_comment_count, actual_impression_count, actual_result_recorded_at,
+            created_at, updated_at
+        FROM generated_contents_tmp;
+        DROP TABLE generated_contents_tmp;
+        """
+    )
+    conn.execute(
+        "INSERT INTO generated_contents (id, platform, content_type, body, actual_view_count) "
+        "VALUES (5, 'TikTok', 'video_script', '既存の台本', 12345)"
+    )
+    conn.commit()
+    conn.close()
+
+    init_db(db_path)  # search_keywords列だけが無い状態 → ALTER TABLE ADD COLUMNで追加されるはず
+
+    conn = get_connection(db_path)
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(generated_contents)")}
+    assert "search_keywords" in columns
+
+    row = conn.execute("SELECT * FROM generated_contents WHERE id = 5").fetchone()
+    assert row["body"] == "既存の台本"
+    assert row["actual_view_count"] == 12345
+    assert row["search_keywords"] is None
     conn.close()

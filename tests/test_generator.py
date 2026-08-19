@@ -155,3 +155,69 @@ def test_generate_contents_includes_past_performance_context_in_prompt(monkeypat
     assert len(captured_prompts) == 1
     assert "過去のバズ投稿" in captured_prompts[0]
     assert "99999" in captured_prompts[0]
+
+
+def test_generate_contents_persists_search_keywords_for_tiktok(monkeypatch, db_path, drafts_dir):
+    conn = get_connection(db_path)
+    analysis_id = _insert_analysis(conn)
+    conn.close()
+
+    fake_result = GenerationResult(
+        contents=[
+            GeneratedContentItem(
+                platform="TikTok",
+                content_type="video_script",
+                title="台本タイトル",
+                body="シーン1: フック\nシーン2: 本編",
+                search_keywords=["空想ロマンス ライブ", "空想ロマンス M/V", "空想ロマンス ショート"],
+            )
+        ]
+    )
+    monkeypatch.setattr("src.ai.generator.generate_json", lambda *a, **k: fake_result)
+
+    result = generate_contents_for_all_platforms(
+        analysis_id=analysis_id, platforms=[Platform.TIKTOK], db_path=db_path
+    )
+    assert result["ok"] is True
+    assert result["generated_count"] == 1
+
+    conn = get_connection(db_path)
+    row = conn.execute("SELECT * FROM generated_contents").fetchone()
+    conn.close()
+
+    import json as _json
+
+    assert _json.loads(row["search_keywords"]) == [
+        "空想ロマンス ライブ", "空想ロマンス M/V", "空想ロマンス ショート",
+    ]
+
+    draft_path = drafts_dir / f"{row['id']:04d}_TikTok_video_script.md"
+    assert draft_path.exists()
+    content = draft_path.read_text(encoding="utf-8")
+    assert "動画素材の検索キーワード" in content
+    assert "空想ロマンス ライブ" in content
+
+
+def test_generate_contents_no_search_keywords_omits_draft_section(monkeypatch, db_path, drafts_dir):
+    conn = get_connection(db_path)
+    analysis_id = _insert_analysis(conn)
+    conn.close()
+
+    fake_result = GenerationResult(
+        contents=[GeneratedContentItem(platform="X", content_type="post_text", body="本文のみ")]
+    )
+    monkeypatch.setattr("src.ai.generator.generate_json", lambda *a, **k: fake_result)
+
+    result = generate_contents_for_all_platforms(
+        analysis_id=analysis_id, platforms=[Platform.X], db_path=db_path
+    )
+    assert result["ok"] is True
+
+    conn = get_connection(db_path)
+    row = conn.execute("SELECT * FROM generated_contents").fetchone()
+    conn.close()
+    assert row["search_keywords"] is None
+
+    draft_path = drafts_dir / f"{row['id']:04d}_X_post_text.md"
+    content = draft_path.read_text(encoding="utf-8")
+    assert "動画素材の検索キーワード" not in content

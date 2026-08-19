@@ -1,0 +1,54 @@
+name: Render TikTok Video
+
+# generated_contents.id (platform=TikTok) を指定して、
+# キーワード抽出→素材自動取得→ナレーション音声生成→縦型動画合成を手動実行する。
+#
+# - DBへの書き込みは行わない（読み取りのみ）ため、GROQ_API_KEY等のSecretsは不要。
+# - 動画素材は空想ロマンス公式チャンネルの既知動画のみに限定される
+#   (詳細は src/video/fetcher.py を参照)。
+# - 生成された動画は大容量のためリポジトリへはコミットせず、
+#   このワークフローの Artifacts からダウンロードする。
+on:
+  workflow_dispatch:
+    inputs:
+      content_id:
+        description: "generated_contents.id (platform=TikTok の投稿案)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install system dependencies (ffmpeg, Japanese fonts)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg fonts-noto-cjk
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Render TikTok video
+        run: python src/video/render_tiktok.py --content-id "${{ inputs.content_id }}"
+
+      - name: Upload rendered video as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tiktok-video-${{ inputs.content_id }}
+          path: content/videos/*.mp4
+          retention-days: 14
+          if-no-files-found: error
