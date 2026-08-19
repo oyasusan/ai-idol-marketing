@@ -17,7 +17,9 @@ concurrency:
 jobs:
   run-pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Groq無料枠のレート制限対策で各API呼び出しの間に待機を挟むため、
+    # 生成(最大5件)・評価(最大20件)を合わせると余裕を持たせる必要がある。
+    timeout-minutes: 30
 
     steps:
       - name: Checkout repository
@@ -33,8 +35,11 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Run pipeline (collect -> analyze -> generate -> evaluate -> report)
-        # データ収集は youtube-analytics リポジトリの公開DBを取り込む方式のため、
-        # YOUTUBE_API_KEY / YOUTUBE_CHANNEL_ID は不要。
+        # データ収集は youtube-analytics リポジトリ(oyasusan/youtube-analytics)の
+        # 公開DBファイルを認証なしで取り込む方式 (src/collectors/youtube_analytics_import.py)
+        # のため、YOUTUBE_API_KEY / YOUTUBE_CHANNEL_ID は不要。
+        # (YouTube Data APIを直接叩く代替実装 src/collectors/youtube.py を
+        #  main.py から使う場合のみ、この2つのSecretsが必要になる)
         env:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
         run: python src/main.py
@@ -44,7 +49,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          git add data/database.sqlite content/drafts/
+          git add data/database.sqlite reports/ content/drafts/
 
           if git diff --staged --quiet; then
             echo "変更がないためコミットをスキップします。"
