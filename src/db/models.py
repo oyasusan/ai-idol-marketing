@@ -71,16 +71,75 @@ CREATE TABLE IF NOT EXISTS generated_contents (
     evaluation_score REAL CHECK (evaluation_score IS NULL OR (evaluation_score BETWEEN 0 AND 100)),
     evaluation_reason TEXT,
     status TEXT NOT NULL DEFAULT 'pending'
-        CHECK (status IN ('pending', 'approved', 'rejected', 'needs_revision')),
+        CHECK (status IN ('pending', 'approved', 'rejected', 'needs_revision', 'published')),
     draft_file_path TEXT,                   -- content/drafts/ 配下の出力ファイルパス
     reviewed_by TEXT,
     reviewed_at TEXT,
+    -- 以下は実際に投稿された後の成果（フィードバック・学習ループ用）。
+    -- 本システムは投稿を自動化しないため、これらは人間が
+    -- src/db/record_result.py 経由で手動記録する。
+    actual_view_count INTEGER,
+    actual_like_count INTEGER,
+    actual_comment_count INTEGER,
+    actual_impression_count INTEGER,
+    actual_result_recorded_at TEXT,
     created_at TEXT NOT NULL DEFAULT (datetime('now')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_generated_contents_status ON generated_contents(status);
 CREATE INDEX IF NOT EXISTS idx_generated_contents_platform ON generated_contents(platform);
+CREATE INDEX IF NOT EXISTS idx_generated_contents_actual_view_count
+    ON generated_contents(actual_view_count);
+"""
+
+# SQLiteはALTER TABLEでCHECK制約を変更できないため、既存の generated_contents
+# (旧スキーマ: statusにpublishedが無い/actual_*列が無い)を新スキーマへ
+# 安全に移行するためのテーブル再作成SQL。既存データは全件そのままコピーする。
+_MIGRATE_GENERATED_CONTENTS_SQL = """
+ALTER TABLE generated_contents RENAME TO generated_contents_old;
+
+CREATE TABLE generated_contents (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    analysis_id INTEGER REFERENCES ai_analyses(id) ON DELETE SET NULL,
+    platform TEXT NOT NULL CHECK (platform IN ('X', 'Instagram', 'TikTok', 'YouTube', 'note')),
+    content_type TEXT NOT NULL,
+    title TEXT,
+    body TEXT NOT NULL,
+    target_persona TEXT,
+    evaluation_score REAL CHECK (evaluation_score IS NULL OR (evaluation_score BETWEEN 0 AND 100)),
+    evaluation_reason TEXT,
+    status TEXT NOT NULL DEFAULT 'pending'
+        CHECK (status IN ('pending', 'approved', 'rejected', 'needs_revision', 'published')),
+    draft_file_path TEXT,
+    reviewed_by TEXT,
+    reviewed_at TEXT,
+    actual_view_count INTEGER,
+    actual_like_count INTEGER,
+    actual_comment_count INTEGER,
+    actual_impression_count INTEGER,
+    actual_result_recorded_at TEXT,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+INSERT INTO generated_contents (
+    id, analysis_id, platform, content_type, title, body, target_persona,
+    evaluation_score, evaluation_reason, status, draft_file_path,
+    reviewed_by, reviewed_at, created_at, updated_at
+)
+SELECT
+    id, analysis_id, platform, content_type, title, body, target_persona,
+    evaluation_score, evaluation_reason, status, draft_file_path,
+    reviewed_by, reviewed_at, created_at, updated_at
+FROM generated_contents_old;
+
+DROP TABLE generated_contents_old;
+
+CREATE INDEX IF NOT EXISTS idx_generated_contents_status ON generated_contents(status);
+CREATE INDEX IF NOT EXISTS idx_generated_contents_platform ON generated_contents(platform);
+CREATE INDEX IF NOT EXISTS idx_generated_contents_actual_view_count
+    ON generated_contents(actual_view_count);
 """
 
 
@@ -97,6 +156,7 @@ class ContentStatus(str, Enum):
     APPROVED = "approved"
     REJECTED = "rejected"
     NEEDS_REVISION = "needs_revision"
+    PUBLISHED = "published"  # 実際にSNSへ投稿済み（人間が手動投稿した後に記録する）
 
 
 class Content(BaseModel):
@@ -145,6 +205,12 @@ class GeneratedContent(BaseModel):
     draft_file_path: Optional[str] = None
     reviewed_by: Optional[str] = None
     reviewed_at: Optional[str] = None
+    # 実際に投稿された後の成果（record_result.py が記録する）
+    actual_view_count: Optional[int] = None
+    actual_like_count: Optional[int] = None
+    actual_comment_count: Optional[int] = None
+    actual_impression_count: Optional[int] = None
+    actual_result_recorded_at: Optional[str] = None
 
 
 def get_connection(db_path: Optional[Path] = None) -> sqlite3.Connection:
@@ -158,11 +224,27 @@ def get_connection(db_path: Optional[Path] = None) -> sqlite3.Connection:
     return conn
 
 
+def _needs_generated_contents_migration(conn: sqlite3.Connection) -> bool:
+    columns = {row["name"] for row in conn.execute("PRAGMA table_info(generated_contents)")}
+    if not columns:
+        return False  # テーブル未作成。SCHEMA_SQL側のCREATE TABLEで新スキーマが作られる。
+    return "actual_view_count" not in columns
+
+
 def init_db(db_path: Optional[Path] = None) -> None:
-    """テーブルが存在しなければ作成する（冪等）。"""
+    """テーブルが存在しなければ作成する（冪等）。
+
+    既存DBが旧スキーマ（実績記録用カラムが無い generated_contents）の場合は、
+    テーブルを安全に再作成して移行する（データは保持される）。
+    """
 
     conn = get_connection(db_path)
     try:
+        # 移行はSCHEMA_SQL実行前に行う。SCHEMA_SQLには新カラムを対象とした
+        # CREATE INDEXが含まれるため、旧スキーマのテーブルが残ったまま
+        # 実行すると「no such column」エラーになる。
+        if _needs_generated_contents_migration(conn):
+            conn.executescript(_MIGRATE_GENERATED_CONTENTS_SQL)
         conn.executescript(SCHEMA_SQL)
         conn.commit()
     finally:

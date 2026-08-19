@@ -122,3 +122,36 @@ def test_generate_contents_partial_failure_continues_other_platforms(monkeypatch
     assert result["ok"] is True
     assert result["generated_count"] == 1
     assert result["failed_platforms"] == ["TikTok"]
+
+
+def test_generate_contents_includes_past_performance_context_in_prompt(monkeypatch, db_path, drafts_dir):
+    conn = get_connection(db_path)
+    analysis_id = _insert_analysis(conn)
+    conn.execute(
+        """
+        INSERT INTO generated_contents
+            (platform, content_type, title, body, actual_view_count, actual_like_count)
+        VALUES ('X', 'post_text', '過去のバズ投稿', '過去の本文', 99999, 5000)
+        """
+    )
+    conn.commit()
+    conn.close()
+
+    captured_prompts = []
+
+    def fake_generate_json(prompt, **kwargs):
+        captured_prompts.append(prompt)
+        return GenerationResult(
+            contents=[GeneratedContentItem(platform="X", content_type="post_text", body="新しい本文")]
+        )
+
+    monkeypatch.setattr("src.ai.generator.generate_json", fake_generate_json)
+
+    result = generate_contents_for_all_platforms(
+        analysis_id=analysis_id, platforms=[Platform.X], db_path=db_path
+    )
+
+    assert result["ok"] is True
+    assert len(captured_prompts) == 1
+    assert "過去のバズ投稿" in captured_prompts[0]
+    assert "99999" in captured_prompts[0]

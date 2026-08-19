@@ -28,6 +28,10 @@ logger = logging.getLogger(__name__)
 # 実測で安定して成功する件数に抑えている。増やす場合はGroqのレート制限に注意すること。
 DEFAULT_CONTENT_LIMIT = 50
 
+# 過去実績コンテキスト(高/低パフォーマンス事例)としてプロンプトへ埋め込む件数。
+# トークン消費を抑えるため少数に絞る。
+DEFAULT_PAST_PERFORMANCE_LIMIT = 3
+
 
 class WinLossPattern(BaseModel):
     pattern: str
@@ -61,6 +65,85 @@ def format_patterns_text(patterns_json: Optional[str]) -> str:
         if isinstance(p, dict)
     ]
     return "\n".join(lines) if lines else "(パターンなし)"
+
+
+def fetch_past_performance_examples(
+    conn: sqlite3.Connection,
+    top_n: int = DEFAULT_PAST_PERFORMANCE_LIMIT,
+    bottom_n: int = DEFAULT_PAST_PERFORMANCE_LIMIT,
+) -> dict[str, list[dict[str, Any]]]:
+    """実際に投稿され成果が記録済み（`record_result.py` で `actual_view_count` 等が
+    記録された）コンテンツから、高パフォーマンス/低パフォーマンスの実例を抽出する。
+
+    分析(analysis_prompt)・生成(generation_prompt)の両方で、AIが実際の投稿結果に
+    基づいて「勝ちパターンを再現し、負けパターンを回避する」ための根拠として使う
+    （LEVEL 4: フィードバック・学習ループ）。
+    """
+
+    rows = conn.execute(
+        """
+        SELECT id, platform, content_type, title, body,
+               actual_view_count, actual_like_count, actual_comment_count, actual_impression_count
+        FROM generated_contents
+        WHERE actual_view_count IS NOT NULL
+        ORDER BY actual_view_count DESC
+        """
+    ).fetchall()
+
+    examples = [dict(r) for r in rows]
+    total = len(examples)
+
+    if total <= top_n + bottom_n:
+        # 記録件数が少ない場合、素直にtop_n/bottom_nを適用すると片方に全件寄ってしまう
+        # （例: 総数2件でtop_n=bottom_n=3だと両方ともhighに入りlowが空になる）。
+        # 上位/下位でバランスよく按分する（総数が奇数の場合は上位を1件多くする）。
+        high_count = (total + 1) // 2
+        low_count = total - high_count
+    else:
+        high_count = top_n
+        low_count = bottom_n
+
+    high_performers = examples[:high_count]
+    low_performers = list(reversed(examples[total - low_count :])) if low_count else []
+
+    return {"high_performers": high_performers, "low_performers": low_performers}
+
+
+def format_past_performance_text(examples: dict[str, list[dict[str, Any]]]) -> str:
+    """fetch_past_performance_examples() の結果をプロンプト埋め込み用テキストに整形する。"""
+
+    def _format_list(items: list[dict[str, Any]]) -> str:
+        if not items:
+            return "(記録なし)"
+        lines = []
+        for item in items:
+            metrics = []
+            if item.get("actual_view_count") is not None:
+                metrics.append(f"再生数{item['actual_view_count']}")
+            if item.get("actual_like_count") is not None:
+                metrics.append(f"いいね{item['actual_like_count']}")
+            if item.get("actual_comment_count") is not None:
+                metrics.append(f"コメント{item['actual_comment_count']}")
+            if item.get("actual_impression_count") is not None:
+                metrics.append(f"インプレッション{item['actual_impression_count']}")
+            metrics_text = "・".join(metrics) if metrics else "実績値なし"
+
+            body_preview = (item.get("body") or "").replace("\n", " ").strip()
+            if len(body_preview) > 60:
+                body_preview = body_preview[:60] + "…"
+
+            title = item.get("title") or "(タイトルなし)"
+            lines.append(
+                f"- [{item['platform']}] {title}（{metrics_text}）\n  本文抜粋: {body_preview}"
+            )
+        return "\n".join(lines)
+
+    return (
+        "【高パフォーマンスだった投稿】\n"
+        + _format_list(examples.get("high_performers", []))
+        + "\n\n【低パフォーマンスだった投稿】\n"
+        + _format_list(examples.get("low_performers", []))
+    )
 
 
 def _row_to_analysis_input(row: sqlite3.Row) -> dict[str, Any]:
@@ -162,12 +245,17 @@ def run_analysis(
         period_start = min(published_ats) if published_ats else None
         period_end = max(published_ats) if published_ats else None
 
+        past_performance_context = format_past_performance_text(
+            fetch_past_performance_examples(conn)
+        )
+
         prompt = build_prompt(
             "analysis_prompt",
             channel_name=channel_name,
             period_start=period_start or "",
             period_end=period_end or "",
             contents_json=json.dumps(contents_input, ensure_ascii=False, indent=2),
+            past_performance_context=past_performance_context,
         )
         if prompt is None:
             logger.error("analysis_prompt テンプレートの読み込みに失敗したため分析を中止します。")

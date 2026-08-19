@@ -35,7 +35,7 @@ from config.settings import DRAFTS_DIR as DEFAULT_DRAFTS_DIR
 from src.ai import analyzer, evaluator, generator
 from src.ai.analyzer import format_patterns_text
 from src.collectors import youtube_analytics_import
-from src.db.models import get_connection
+from src.db.models import get_connection, init_db
 
 logger = logging.getLogger(__name__)
 
@@ -200,6 +200,9 @@ def run_pipeline(
     run_date = run_date or date.today()
     started_at = datetime.now(timezone.utc)
     logger.info("=== パイプライン開始: %s ===", run_date.isoformat())
+
+    # 冪等なテーブル作成/スキーマ移行。既存DBが旧スキーマの場合は自動で移行する。
+    init_db(db_path)
 
     collect_result = youtube_analytics_import.import_from_youtube_analytics(db_path=db_path)
     logger.info("収集結果: %s", collect_result)

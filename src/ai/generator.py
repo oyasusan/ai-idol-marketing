@@ -26,7 +26,11 @@ from typing import Any, Optional
 from pydantic import BaseModel
 
 from config.settings import DRAFTS_DIR
-from src.ai.analyzer import format_patterns_text
+from src.ai.analyzer import (
+    fetch_past_performance_examples,
+    format_past_performance_text,
+    format_patterns_text,
+)
 from src.ai.groq_client import DEFAULT_MODEL, build_prompt, generate_json
 from src.db.models import ContentStatus, Platform, get_connection
 
@@ -171,6 +175,7 @@ def generate_for_platform(
     content_type: str = "",
     additional_context: str = "",
     model: str = DEFAULT_MODEL,
+    past_performance_context: str = "",
 ) -> Optional[GenerationResult]:
     """1プラットフォーム分のコンテンツ案をGroq APIで生成する。"""
 
@@ -182,6 +187,7 @@ def generate_for_platform(
         win_patterns=format_patterns_text(analysis_row["win_patterns"]),
         loss_patterns=format_patterns_text(analysis_row["loss_patterns"]),
         additional_context=additional_context,
+        past_performance_context=past_performance_context,
     )
     if prompt is None:
         logger.error("generation_prompt テンプレートの読み込みに失敗しました。")
@@ -224,6 +230,10 @@ def generate_contents_for_all_platforms(
         failed_platforms: list[str] = []
         draft_paths: list[str] = []
 
+        past_performance_context = format_past_performance_text(
+            fetch_past_performance_examples(conn)
+        )
+
         for platform in platforms:
             # 直前の分析呼び出し等でTPM枠を使い切っている可能性があるため、
             # 1件目の呼び出し前にも間隔を空ける。
@@ -235,6 +245,7 @@ def generate_contents_for_all_platforms(
                 content_type=content_type,
                 additional_context=additional_context,
                 model=model,
+                past_performance_context=past_performance_context,
             )
             if result is None or not result.contents:
                 failed_platforms.append(platform.value)
