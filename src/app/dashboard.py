@@ -37,6 +37,16 @@ from config.settings import VIDEOS_DIR  # noqa: E402
 from src.db.models import ContentStatus, Platform, get_connection, init_db  # noqa: E402
 from src.db.record_result import record_result  # noqa: E402
 
+# Streamlit Community Cloud等、Gitリポジトリから都度コンテナが起動する環境では、
+# ここでの書き込み（採用/却下・成果記録）はコンテナのローカルファイルへの変更に
+# 過ぎず、GitHubへは反映されない。コンテナ再起動で失われるため、恒久的な記録は
+# ローカル環境（`streamlit run`）または既存CLI（record_result.py等）で行うこと。
+CLOUD_WRITE_WARNING = (
+    "⚠️ クラウド版でのご利用の場合、ここでの変更（採用/却下・成果記録）は"
+    "コンテナの一時ファイルにのみ反映され、GitHubへは自動反映されません。"
+    "コンテナ再起動で失われるため、恒久的な記録はローカル環境またはCLIで行ってください。"
+)
+
 PLATFORM_OPTIONS = ["すべて"] + [p.value for p in Platform]
 STATUS_LABEL_TO_VALUE = {
     "すべて": None,
@@ -198,6 +208,7 @@ def _render_content_card(row: sqlite3.Row, key_prefix: str, db_path: Optional[Pa
             with st.expander("🤖 AI事前評価の詳細"):
                 st.write(row["evaluation_reason"])
 
+        st.caption(CLOUD_WRITE_WARNING)
         btn_cols = st.columns([1, 1, 2])
         if btn_cols[0].button("✅ 採用する", key=f"{key_prefix}_approve_{row['id']}"):
             conn = get_connection(db_path)
@@ -283,6 +294,12 @@ def _render_archive_tab(
 def _render_video_tab(videos_dir: Path, db_path: Optional[Path]) -> None:
     st.subheader("生成動画プレビュー")
 
+    st.caption(
+        "生成された動画ファイル(.mp4)は容量が大きいためGit管理対象外です。"
+        "クラウド版ではこのタブは常に空になります。動画を確認する場合はローカル環境で"
+        "`streamlit run src/app/dashboard.py` を実行してください。"
+    )
+
     videos = list_video_files(videos_dir)
     if not videos:
         st.info(
@@ -315,6 +332,7 @@ def _render_feedback_tab(db_path: Optional[Path]) -> None:
         "実際にSNSへ投稿した後の再生数・いいね数などをDBへ記録します"
         "（このダッシュボードがSNSへ自動投稿することはありません）。"
     )
+    st.caption(CLOUD_WRITE_WARNING)
 
     with st.form("record_result_form"):
         content_id = st.number_input("コンテンツID (generated_contents.id)", min_value=1, step=1)

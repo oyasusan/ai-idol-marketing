@@ -226,6 +226,15 @@ def test_app_renders_content_card_with_title_and_body(db_path):
     code_values = [c.value for c in at.tabs[0].code]
     assert any("カード本文です" in v for v in code_values)
 
+    caption_values = [c.value for c in at.tabs[0].caption]
+    assert any("クラウド版でのご利用の場合" in v for v in caption_values)
+
+
+def test_app_feedback_tab_shows_cloud_write_warning(db_path):
+    at = _run_app(db_path)
+    caption_values = [c.value for c in at.tabs[3].caption]
+    assert any("クラウド版でのご利用の場合" in v for v in caption_values)
+
 
 def test_app_approve_button_updates_status(db_path):
     conn = get_connection(db_path)
