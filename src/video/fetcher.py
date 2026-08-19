@@ -75,6 +75,12 @@ def _common_ydl_opts() -> dict[str, Any]:
                 )
             }
         },
+        # YouTubeの署名/PO Token関連のJS challengeを解決できないと、cookie設定済みでも
+        # "Requested format is not available"でフォーマットが一切取得できなくなることがある
+        # (SABRストリーミング関連、詳細: https://github.com/yt-dlp/yt-dlp/issues/12482 )。
+        # denoが無い環境でもGitHub Actionsランナーには標準でnodeが入っているため、
+        # 両方を候補にして解決できる方を使わせる。
+        "js_runtimes": {"deno": {}, "node": {}},
     }
     if has_cookies:
         opts["cookiefile"] = cookies_file
