@@ -66,6 +66,11 @@ class GenerationResult(BaseModel):
     contents: list[GeneratedContentItem] = []
 
 
+class NarrationBackfillResult(BaseModel):
+    search_keywords: list[str] = []
+    narration_text: Optional[str] = None
+
+
 def _fetch_analysis(conn: sqlite3.Connection, analysis_id: Optional[int]) -> Optional[sqlite3.Row]:
     if analysis_id is not None:
         return conn.execute(
@@ -296,6 +301,82 @@ def generate_contents_for_all_platforms(
             "failed_platforms": failed_platforms,
             "draft_paths": draft_paths,
         }
+    finally:
+        conn.close()
+
+
+def backfill_tiktok_video_fields(
+    content_id: int,
+    model: str = DEFAULT_MODEL,
+    db_path: Optional[Path] = None,
+) -> dict[str, Any]:
+    """指定content_idのTikTok動画台本に narration_text/search_keywords が
+    欠けている場合、既存の body を根拠にGroq APIで補完しDBへ書き戻す。
+
+    旧仕様（この2カラムが導入される前）で生成されたレコードを
+    `src/video/render_tiktok.py` で使えるようにするための事後補完用。
+    既に両方揃っている場合は何もせず filled=False を返す（冪等）。
+
+    Returns:
+        {"ok": bool, "content_id": int, "filled": bool, "error": Optional[str]}
+    """
+
+    conn = get_connection(db_path)
+    try:
+        row = conn.execute(
+            "SELECT * FROM generated_contents WHERE id = ?", (content_id,)
+        ).fetchone()
+        if row is None:
+            return {
+                "ok": False, "content_id": content_id, "filled": False,
+                "error": f"generated_contents.id={content_id} が見つかりません。",
+            }
+
+        if row["platform"] != Platform.TIKTOK.value:
+            return {
+                "ok": False, "content_id": content_id, "filled": False,
+                "error": f"platform='{row['platform']}' はTikTok以外のため補完対象外です。",
+            }
+
+        has_narration = bool(row["narration_text"] and row["narration_text"].strip())
+        has_keywords = bool(row["search_keywords"])
+        if has_narration and has_keywords:
+            logger.info("narration_text/search_keywordsは既に揃っています。content_id=%s", content_id)
+            return {"ok": True, "content_id": content_id, "filled": False, "error": None}
+
+        prompt = build_prompt(
+            "narration_backfill_prompt",
+            title=row["title"] or "",
+            body=row["body"] or "",
+            target_persona=row["target_persona"] or "",
+        )
+        if prompt is None:
+            return {
+                "ok": False, "content_id": content_id, "filled": False,
+                "error": "narration_backfill_prompt テンプレートの読み込みに失敗しました。",
+            }
+
+        result = generate_json(prompt, response_schema=NarrationBackfillResult, model=model)
+        if result is None or not result.narration_text or not result.search_keywords:
+            return {
+                "ok": False, "content_id": content_id, "filled": False,
+                "error": "Groq APIから有効な補完結果を取得できませんでした。",
+            }
+
+        conn.execute(
+            """
+            UPDATE generated_contents
+            SET search_keywords = ?, narration_text = ?, updated_at = datetime('now')
+            WHERE id = ?
+            """,
+            (json.dumps(result.search_keywords, ensure_ascii=False), result.narration_text, content_id),
+        )
+        conn.commit()
+        logger.info("narration_text/search_keywordsを補完しました。content_id=%s", content_id)
+        return {"ok": True, "content_id": content_id, "filled": True, "error": None}
+    except sqlite3.Error as exc:
+        conn.rollback()
+        return {"ok": False, "content_id": content_id, "filled": False, "error": str(exc)}
     finally:
         conn.close()
 

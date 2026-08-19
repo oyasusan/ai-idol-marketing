@@ -1,9 +1,11 @@
 name: Render TikTok Video
 
 # generated_contents.id (platform=TikTok) を指定して、
+# 【不足があればnarration_text/search_keywordsをGroqで事後補完→DBへcommit】→
 # キーワード抽出→素材自動取得→ナレーション音声生成→縦型動画合成を手動実行する。
 #
-# - DBへの書き込みは行わない（読み取りのみ）ため、GROQ_API_KEY等のSecretsは不要。
+# - 補完(backfill_narration.py)がDBへ書き込みを行うため GROQ_API_KEY と
+#   `permissions: contents: write` が必要（補完が不要なレコードでは書き込みは発生しない）。
 # - 動画素材は空想ロマンス公式チャンネルの既知動画のみに限定される
 #   (詳細は src/video/fetcher.py を参照)。
 # - 生成された動画は大容量のためリポジトリへはコミットせず、
@@ -17,7 +19,13 @@ on:
         type: string
 
 permissions:
-  contents: read
+  contents: write
+
+# data/database.sqlite への書き込み・pushがdaily_pipeline.ymlと競合しないよう、
+# 同じconcurrencyグループで直列化する（cancel-in-progress: falseで両方とも実行を維持）。
+concurrency:
+  group: daily-pipeline
+  cancel-in-progress: false
 
 jobs:
   render:
@@ -41,6 +49,27 @@ jobs:
 
       - name: Install Python dependencies
         run: pip install -r requirements.txt
+
+      - name: Backfill narration_text / search_keywords if missing
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        run: python src/video/backfill_narration.py --content-id "${{ inputs.content_id }}"
+
+      - name: Commit and push backfilled DB (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add data/database.sqlite
+
+          if git diff --staged --quiet; then
+            echo "変更がないためコミットをスキップします。"
+            exit 0
+          fi
+
+          git commit -m "chore: TikTok動画台本のnarration_text/search_keywordsを補完 (content_id=${{ inputs.content_id }})"
+          git pull --rebase origin "${{ github.ref_name }}"
+          git push origin "HEAD:${{ github.ref_name }}"
 
       - name: Render TikTok video
         run: python src/video/render_tiktok.py --content-id "${{ inputs.content_id }}"

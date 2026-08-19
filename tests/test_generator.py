@@ -1,8 +1,12 @@
+import json
+
 import pytest
 
 from src.ai.generator import (
     GeneratedContentItem,
     GenerationResult,
+    NarrationBackfillResult,
+    backfill_tiktok_video_fields,
     generate_contents_for_all_platforms,
 )
 from src.db.models import ContentStatus, Platform, get_connection, init_db
@@ -221,3 +225,86 @@ def test_generate_contents_no_search_keywords_omits_draft_section(monkeypatch, d
     draft_path = drafts_dir / f"{row['id']:04d}_X_post_text.md"
     content = draft_path.read_text(encoding="utf-8")
     assert "動画素材の検索キーワード" not in content
+
+
+def _insert_tiktok_content(conn, platform="TikTok", narration_text=None, search_keywords=None):
+    keywords_json = json.dumps(search_keywords) if search_keywords is not None else None
+    cursor = conn.execute(
+        """
+        INSERT INTO generated_contents
+            (platform, content_type, title, body, target_persona, narration_text, search_keywords)
+        VALUES (?, 'video_script', 'テストタイトル', '台本本文', '10代女性ファン', ?, ?)
+        """,
+        (platform, narration_text, keywords_json),
+    )
+    conn.commit()
+    return cursor.lastrowid
+
+
+def test_backfill_missing_content_id_returns_ok_false(db_path):
+    result = backfill_tiktok_video_fields(9999, db_path=db_path)
+    assert result["ok"] is False
+    assert "9999" in result["error"]
+
+
+def test_backfill_rejects_non_tiktok_platform(db_path):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn, platform="X")
+    conn.close()
+
+    result = backfill_tiktok_video_fields(content_id, db_path=db_path)
+    assert result["ok"] is False
+    assert "TikTok" in result["error"]
+
+
+def test_backfill_noop_when_already_filled(monkeypatch, db_path):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(
+        conn, narration_text="既存のナレーション", search_keywords=["既存キーワード"]
+    )
+    conn.close()
+
+    called = False
+
+    def _fail_if_called(*_a, **_k):
+        nonlocal called
+        called = True
+
+    monkeypatch.setattr("src.ai.generator.generate_json", _fail_if_called)
+
+    result = backfill_tiktok_video_fields(content_id, db_path=db_path)
+    assert result == {"ok": True, "content_id": content_id, "filled": False, "error": None}
+    assert called is False
+
+
+def test_backfill_fills_missing_fields_and_persists(monkeypatch, db_path):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn)
+    conn.close()
+
+    fake_result = NarrationBackfillResult(
+        search_keywords=["ライブ", "笑顔"],
+        narration_text="これは補完されたナレーションです。",
+    )
+    monkeypatch.setattr("src.ai.generator.generate_json", lambda *a, **k: fake_result)
+
+    result = backfill_tiktok_video_fields(content_id, db_path=db_path)
+    assert result == {"ok": True, "content_id": content_id, "filled": True, "error": None}
+
+    conn = get_connection(db_path)
+    row = conn.execute("SELECT * FROM generated_contents WHERE id = ?", (content_id,)).fetchone()
+    conn.close()
+    assert row["narration_text"] == "これは補完されたナレーションです。"
+    assert json.loads(row["search_keywords"]) == ["ライブ", "笑顔"]
+
+
+def test_backfill_returns_ok_false_when_groq_fails(monkeypatch, db_path):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn)
+    conn.close()
+
+    monkeypatch.setattr("src.ai.generator.generate_json", lambda *a, **k: None)
+
+    result = backfill_tiktok_video_fields(content_id, db_path=db_path)
+    assert result["ok"] is False
+    assert result["filled"] is False
