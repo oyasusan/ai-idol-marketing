@@ -17,10 +17,13 @@
 ├── prompts/             # 各種AIプロンプト (.md)
 ├── reports/             # 日次分析結果 (Markdown)
 ├── content/drafts/      # 生成されたコンテンツ案
+├── content/videos/       # 生成されたTikTok動画 (.mp4, Git非管理)
 ├── src/
 │   ├── collectors/      # データ収集 (YouTube API)
 │   ├── db/              # SQLiteモデル・接続
 │   ├── ai/              # Groq分析・生成・評価ロジック
+│   ├── video/           # TikTok動画素材取得・合成
+│   ├── app/             # Streamlit Webダッシュボード
 │   └── main.py          # エントリーポイント
 └── tests/               # pytest環境
 
@@ -34,3 +37,5 @@
 ## コマンド
 - テスト実行: `pytest`
 - メインパイプライン実行: `python src/main.py`
+- TikTok動画生成: `python src/video/render_tiktok.py --content-id <ID>`
+- Webダッシュボード起動: `streamlit run src/app/dashboard.py`（http://localhost:8501）

@@ -7,3 +7,5 @@ pytest>=8.3.0
 yt-dlp>=2024.8.0
 moviepy>=2.1.0
 gTTS>=2.5.0
+streamlit>=1.38.0
+pandas>=2.2.0
