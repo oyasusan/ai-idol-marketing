@@ -1,7 +1,7 @@
 {
   "run_date": "2026-08-19",
-  "started_at": "2026-08-19T02:20:34Z",
-  "finished_at": "2026-08-19T02:23:45Z",
+  "started_at": "2026-08-19T02:43:11Z",
+  "finished_at": "2026-08-19T02:46:07Z",
   "collect": {
     "ok": true,
     "fetched": 300,
@@ -311,22 +311,23 @@
   },
   "analysis": {
     "ok": true,
-    "analysis_id": 5,
+    "analysis_id": 6,
     "content_count": 50,
     "win_pattern_count": 2,
     "loss_pattern_count": 2
   },
   "generation": {
     "ok": true,
-    "analysis_id": 5,
-    "generated_count": 5,
+    "analysis_id": 6,
+    "generated_count": 6,
     "failed_platforms": [],
     "draft_paths": [
-      "/mnt/chromeos/removable/SD Card/work/ai-idol-marketing/content/drafts/0007_X_post_text.md",
-      "/mnt/chromeos/removable/SD Card/work/ai-idol-marketing/content/drafts/0008_Instagram_post_text.md",
-      "/mnt/chromeos/removable/SD Card/work/ai-idol-marketing/content/drafts/0009_TikTok_video_script.md",
-      "/mnt/chromeos/removable/SD Card/work/ai-idol-marketing/content/drafts/0010_YouTube_video_script.md",
-      "/mnt/chromeos/removable/SD Card/work/ai-idol-marketing/content/drafts/0011_note_article.md"
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0012_X_post_text.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0013_X_post_text.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0014_Instagram_post_text.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0015_TikTok_video_script.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0016_YouTube_video_script.md",
+      "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0017_note_article.md"
     ]
   },
   "evaluation": {
@@ -370,6 +371,23 @@
       "updated_at": "2026-08-19 02:22:57"
     },
     {
+      "id": 14,
+      "analysis_id": 6,
+      "platform": "Instagram",
+      "content_type": "post_text",
+      "title": "目合った子かわいすぎる♡",
+      "body": "【空想ロマンス】\n\n今日も彼女の瞳に目合ってみたら…\n\n💖 目合った瞬間の笑顔が、まるで星屑のように輝いてる✨\n\n#空想ロマンス #目合った #爆レス #ウインク #彼女の笑顔 #可愛い #ファンの皆さんへ #ライブ #サイン会 #アイドル\n\n#空想ロマンス #目合った #爆レス #ウインク #彼女の笑顔 #可愛い #ファンの皆さんへ #ライブ #サイン会 #アイドル",
+      "target_persona": "20〜30代女性、アイドル・音楽ファン、SNSで可愛いコンテンツを求める層",
+      "evaluation_score": 80.0,
+      "evaluation_reason": "[AI推奨: approved] タイトルと本文で『目合った』という人気フレーズを活用し、ハッシュタグでエンゲージメントを促進している点が勝ちパターンと合致。文字数はInstagramの投稿上限内で、可愛いイメージとファンへの呼びかけが20〜30代女性アイドルファンに響く。\n良い点: タイトルと本文で人気フレーズ『目合った』を使用し、再生数向上の傾向に合致。 / ハッシュタグが多彩で検索性・エンゲージメントを高める。 / 可愛いトーンとファンへの呼びかけがターゲット層に適合。\n懸念点: 同一ハッシュタグが重複しているため、投稿の見た目が煩雑になる可能性。 / ハッシュタグの多さがスパムと受け取られるリスクがある。\n改善提案: 重複しているハッシュタグを削除し、10〜12個程度に整理。 / 投稿の最後に簡潔なCTA（コメントやいいねを促す）を追加。",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0014_Instagram_post_text.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 02:43:46",
+      "updated_at": "2026-08-19 02:45:20"
+    },
+    {
       "id": 4,
       "analysis_id": 4,
       "platform": "TikTok",
@@ -404,6 +422,23 @@
       "updated_at": "2026-08-19 02:23:13"
     },
     {
+      "id": 15,
+      "analysis_id": 6,
+      "platform": "TikTok",
+      "content_type": "video_script",
+      "title": "目合った子かわいすぎる♡",
+      "body": "【0-2秒】\n「ねえ、みんな！今日の動画は、目合った子のリアクションを大公開！」\n【3-10秒】\n・キャラクター（双葉うゆ）の顔をクローズアップし、可愛い目合いシーンを再現。音楽は軽快なポップ。\n・字幕：『目合った子かわいすぎる♡』\n【11-25秒】\n・キャラが「こんなに目合われたら、どうする？」と質問。視聴者にコメントで答えてもらうよう促す。\n・BGMを少し高めにし、テンポを上げる。\n【26-35秒】\n・視聴者のコメントを抜粋し、画面に表示。リアクションを強調。\n・字幕：『爆レスくれた子かわいい』\n【36-45秒】\n・キャラが「次はどんなシチュエーションにしたらいい？」と問いかけ。\n・視聴者に「次のテーマを投票してね！」とCTA。\n【46-60秒】\n・最後に「フォローして、次の目合いシーンを見逃さないで！」と締め。\n・ハッシュタグ：#目合った #爆レス #ウインク\n\n#目合った #爆レス #ウインク",
+      "target_persona": "18-25歳の女性ファン、アイドル・音楽アーティストのライブや動画に興味があり、可愛いキャラクターとユーモアを好む層",
+      "evaluation_score": 78.0,
+      "evaluation_reason": "[AI推奨: needs_revision] タイトルと内容が分析で示された勝ちパターンと一致し、キャラクターの可愛さとリアクションを強調している。TikTokの短時間での視聴者参加型構成はプラットフォーム特性に合致し、18-25歳女性ファンに訴求しやすい。文字数は60秒以内で収まり、ハッシュタグも適切。リスクはほぼ無く、軽微な表現の過度な期待感を抑える必要あり。\n良い点: 勝ちパターンとの高い一致度 / キャラクターとリアクションの明確な強調 / 視聴者参加型のCTAでエンゲージメント向上 / プラットフォーム特性に合った構成\n懸念点: 一部表現が過度に期待感を誘発する可能性 / ハッシュタグが過剰に同一語句を使用している点\n改善提案: CTA表現をもう少し多様化し、過度な期待感を緩和する / ハッシュタグは3-4個程度に抑え、重複を避ける",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0015_TikTok_video_script.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 02:44:02",
+      "updated_at": "2026-08-19 02:45:36"
+    },
+    {
       "id": 7,
       "analysis_id": 5,
       "platform": "X",
@@ -419,6 +454,40 @@
       "reviewed_at": null,
       "created_at": "2026-08-19 02:21:03",
       "updated_at": "2026-08-19 02:22:41"
+    },
+    {
+      "id": 12,
+      "analysis_id": 6,
+      "platform": "X",
+      "content_type": "post_text",
+      "title": null,
+      "body": "【目合った瞬間】\n今夜の空想ロマンスで、誰かに目合った瞬間を見逃さないで！\nハイライトを見たら、コメントで「好き！」と爆レスしてね！\n\n#目合った #爆レス",
+      "target_persona": "20代前半の女子大生・アイドル好き、SNSでリアクションを楽しむ層",
+      "evaluation_score": 85.0,
+      "evaluation_reason": "[AI推奨: approved] タイトルとハッシュタグに『目合った』『爆レス』といったリアクションを強調した表現が含まれており、分析結果の勝ちパターンに合致。短くインパクトのある構成で20代前半女子大生・アイドル好き層に訴求しやすい。文字数もXの制限内。炎上リスクや誤解を招く表現はなく、事実誤認もない。\n良い点: リアクションを促すハッシュタグでエンゲージメントが期待できる / 短文でインパクトがあり、閲覧者の注意を引きやすい / ターゲット層に合った言葉遣いと内容\n改善提案: ハッシュタグの数を1〜2個に絞り、よりシンプルにする / 投稿内容にもう少し具体的なシチュエーションを入れると共感度UP / 文字数を少し増やしてキャッチコピーを補足すると視覚的に読みやすくなる",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0012_X_post_text.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 02:43:30",
+      "updated_at": "2026-08-19 02:44:49"
+    },
+    {
+      "id": 13,
+      "analysis_id": 6,
+      "platform": "X",
+      "content_type": "post_text",
+      "title": null,
+      "body": "【ウインクで惹きつける】\n空想ロマンスの最新映像、ウインクで見せる秘密のメッセージ！\n見逃したら次の投稿をお楽しみに！\n\n#ウインク #空想ロマンス",
+      "target_persona": "18〜24歳の男女、カジュアルなファッションとアイドル文化に親しむ層",
+      "evaluation_score": 65.0,
+      "evaluation_reason": "[AI推奨: needs_revision] タイトルに『ウインクで惹きつける』というフレーズは視覚的インパクトがあるものの、分析で示された『目合った』や『爆レス』といったリアクションを強調したパターンに比べて直接的な呼びかけが弱い。本文は短く、フォーマットはXに適合しているが、ターゲットのアイドル文化への親しみをもっと具体的に示す余地がある。炎上リスクは低いが、情報の真偽を示す表現が不足している点が改善余地。\n良い点: 短くインパクトのあるタイトル / X向けの文字数制限に合致 / ハッシュタグでトレンド性を活用\n懸念点: リアクションを直接呼びかける表現が不足 / ターゲットのアイドル文化への具体的訴求が弱い / 情報の裏付けが不明\n改善提案: タイトルに『目合った』や『爆レス』のようなリアクション語句を追加 / 本文にアイドルキャラ名や具体的なファッション要素を盛り込む / 感情を引き出す呼びかけを加える",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0013_X_post_text.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 02:43:30",
+      "updated_at": "2026-08-19 02:45:04"
     },
     {
       "id": 5,
@@ -453,6 +522,23 @@
       "reviewed_at": null,
       "created_at": "2026-08-19 02:21:52",
       "updated_at": "2026-08-19 02:23:29"
+    },
+    {
+      "id": 16,
+      "analysis_id": 6,
+      "platform": "YouTube",
+      "content_type": "video_script",
+      "title": "『目合った子かわいすぎる♡』再現企画！",
+      "body": "【動画構成】\n1. イントロ（0:00-0:10）\n   - 画面に「目合った子かわいすぎる♡」という文字と可愛いイラストを表示。\n   - ナレーションで「今日は空想ロマンスの人気フレーズを実際にやってみます！」と挨拶。\n2. メインパート（0:10-1:30）\n   - 同一キャラクター（例：双葉うゆ）を3回連続で登場させ、各回で「目合った」リアクションを実演。\n   - 視聴者に向けて「どの場面が一番好き？」と質問し、コメントを促す。\n3. アウトロ（1:30-1:45）\n   - 「次回は『爆レスくれた子かわいい』を挑戦します！」と告知。\n   - チャンネル登録と高評価を促すCTA。\n4. エンドカード（1:45-2:00）\n   - 関連動画リンクとサムネイルを表示。\n\n※タイトルに「目合った」を入れ、同一キャラクターの連続登場で視聴回数を安定させる戦略を活用。\n\n#目合った #空想ロマンス #双葉うゆ #可愛いリアクション #ファン動画",
+      "target_persona": "20〜30代の女性ファン。アイドル好きで、可愛いリアクションやキャラクターの繰り返しが好き。",
+      "evaluation_score": 78.0,
+      "evaluation_reason": "[AI推奨: needs_revision] タイトルと構成が勝ちパターンと一致し、同一キャラクターの連続登場で視聴回数を安定させる戦略を活用。文字数・フォーマットはYouTubeに適合し、20〜30代女性ファン向けの可愛いリアクションや繰り返し要素が含まれる。\n良い点: タイトルが勝ちパターンに沿っている / 同一キャラクターの連続登場で視聴回数が安定しやすい / 可愛いイラストとリアクションでターゲットに訴求 / コメント促進でエンゲージメント向上 / CTAでチャンネル登録・高評価を促す\n懸念点: タイトル・内容に過度の誇張はないが、フレーズの使用が一部ファン間で誤解を招く可能性 / 同一キャラクターの連続登場が飽きられるリスク\n改善提案: コメント促進の質問をより具体的にし、エンゲージメントを増やす / 次回企画の予告で視聴者の期待感を高める / キャラクターの表情や小道具で差別化を図る",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0016_YouTube_video_script.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 02:44:17",
+      "updated_at": "2026-08-19 02:45:51"
     },
     {
       "id": 2,
@@ -504,6 +590,23 @@
       "reviewed_at": null,
       "created_at": "2026-08-19 02:22:08",
       "updated_at": "2026-08-19 02:23:45"
+    },
+    {
+      "id": 17,
+      "analysis_id": 6,
+      "platform": "note",
+      "content_type": "article",
+      "title": "{{タイトル}}",
+      "body": "【空想ロマンス】\n\nこんにちは、{{アーティスト名}}です。\n\n最近、みなさんに大人気のテーマ「空想ロマンス」を中心に動画を投稿しています。そこで、実際にどのような内容が視聴数を伸ばすのか、データをもとに分析してみました。\n\n1. タイトルにリアクションキーワードを入れる\n   例：『目合った子かわいすぎる♡』や『爆レスくれた子かわいい』など。これらの動画は平均再生数1,200回を大幅に上回り、視聴者の関心を即座に引きつけます。\n\n2. 同一キャラクターを連続で登場させる\n   双葉うゆを含む動画では、3本中2本が1,700回以上の再生数を記録。キャラクターに親しみを持つファンがリピーターになりやすいです。\n\n3. ライブやオンラインサイン会は視聴回数が低め\n   例：『空想ロマンス / ラブ・ロマンスに焦がれたい』は154回。ライブはエンゲージメントが薄く、視聴者の期待に応えるためには別途プロモーションが必要です。\n\nこれらのポイントを踏まえて、今後のnote記事では「リアクションを引き出すタイトル」と「キャラクターを中心に据えたストーリー」を意識した構成にします。\n\nぜひ、コメントで感想やリクエストを教えてくださいね！\n\n※本記事はデータ分析を元に作成した案です。実際の投稿は人間が確認・編集してから行います。\n\n#空想ロマンス #目合った #爆レス #キャラクター",
+      "target_persona": "20〜30代の女性ファンで、SNSでのリアクションやキャラクターへの親近感を重視する層",
+      "evaluation_score": 85.0,
+      "evaluation_reason": "[AI推奨: approved] コンテンツは分析結果の勝ちパターンと一致しており、リアクションキーワードを含むタイトル例や同一キャラクターの連続登場を明示している。noteの文字数制限やフォーマットにも適合し、20〜30代女性ファン向けの親近感とリアクション重視のトーンを保っている。誤情報や誇大表現はなく、炎上リスクも低い。\n良い点: リアクションキーワードを具体例で提示し、データに基づく説得力がある / 同一キャラクターの連続登場を推奨し、ファンリピーター化を促進 / noteの長文形式に適した構成で情報量が充実 / ハッシュタグでSNSでの拡散を意識 / 分析データの根拠を明示し信頼性を高めている\n懸念点: ライブやオンラインサイン会の低視聴数をネガティブに示している点が若干の不安感を与える可能性 / タイトル例に感情的な表現が多く、ブランドトーンに合わないと受け取られるリスク\n改善提案: ライブ・オンラインサイン会の低視聴数に対して改善策や代替プロモーション案を追加し、ポジティブな提案を入れる / タイトル例にもう少し多様な表現を入れ、幅広いファン層にアプローチしやすくする",
+      "status": "pending",
+      "draft_file_path": "/home/runner/work/ai-idol-marketing/ai-idol-marketing/content/drafts/0017_note_article.md",
+      "reviewed_by": null,
+      "reviewed_at": null,
+      "created_at": "2026-08-19 02:44:33",
+      "updated_at": "2026-08-19 02:46:07"
     }
   ]
 }
