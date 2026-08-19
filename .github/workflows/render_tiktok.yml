@@ -48,6 +48,13 @@ jobs:
           cache: "pip"
 
       - name: Install system dependencies (ffmpeg, Japanese fonts)
+        env:
+          # needrestartがカーネル/ライブラリ更新時に対話的な再起動確認ダイアログを
+          # 出そうとしてハングし、ジョブ全体がtimeout-minutesで強制キャンセルされる
+          # ことがあるため、非対話モードを明示する（DEBIAN_FRONTENDだけでは
+          # needrestart自体のダイアログを抑制しきれない場合があるため両方指定）。
+          DEBIAN_FRONTEND: noninteractive
+          NEEDRESTART_MODE: a
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y ffmpeg fonts-noto-cjk
