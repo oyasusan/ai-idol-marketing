@@ -37,5 +37,7 @@
 ## コマンド
 - テスト実行: `pytest`
 - メインパイプライン実行: `python src/main.py`
-- TikTok動画生成: `python src/video/render_tiktok.py --content-id <ID>`
+- TikTok動画生成: `./scripts/run_tiktok.sh <ID>`（VOICEVOX ENGINEの起動確認・起動を自動で行った上で
+  `python src/video/render_tiktok.py --content-id <ID>` を実行する。`--target capcut` 等の追加
+  オプションはそのまま末尾に渡せる）
 - Webダッシュボード起動: `streamlit run src/app/dashboard.py`（http://localhost:8501）

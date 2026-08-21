@@ -45,8 +45,11 @@ DEFAULT_MIN_DURATION_SECONDS = 15
 DEFAULT_MAX_DURATION_SECONDS = 180
 DEFAULT_MIN_HEIGHT = 1080
 DEFAULT_MAX_CLIPS = 2
-# メタデータ確認の母数（フィルタで脱落する分を見込み max_clips より多めに検討する）
-_CANDIDATE_POOL_SIZE = 8
+# メタデータ確認の母数（フィルタで脱落する分を見込み max_clips より多めに検討する）。
+# このチャンネルは反応シーンの短尺投稿（5〜14秒程度）が非常に多く、キーワードの
+# 組み合わせによっては上位8件が軒並みmin_duration未満で全滅することがあるため、
+# 実測（8件中0件 → 30件中5件が条件を満たした例）を踏まえて余裕を持たせている。
+_CANDIDATE_POOL_SIZE = 30
 
 # GitHub Actions等のデータセンターIPからの素の"web"クライアントとしてのアクセスは
 # YouTube側のbot判定("Sign in to confirm you're not a bot")に引っかかりやすい。
@@ -130,6 +133,33 @@ def select_candidate_video_ids(
         LIMIT ?
         """,
         (*like_params, channel_id, limit),
+    ).fetchall()
+
+    return [row["id"] for row in rows]
+
+
+def _select_fallback_video_ids(
+    conn: sqlite3.Connection,
+    channel_id: str = OFFICIAL_CHANNEL_ID,
+    limit: int = _CANDIDATE_POOL_SIZE,
+) -> list[str]:
+    """キーワードに一致する候補が1件も見つからなかった場合のフォールバック。
+
+    背景映像はあくまでB-roll用途で、ナレーション内容と厳密に一致している必要は
+    ないため（生成AIが作るsearch_keywordsは抽象的な語句になりがちで、実際の
+    タイトルの言い回しと一致しないことがある）、キーワードにこだわり続けて素材
+    取得自体が失敗するよりは、チャンネル内の再生数上位動画から選ぶ方が実用上
+    望ましい。
+    """
+
+    rows = conn.execute(
+        """
+        SELECT id FROM contents
+        WHERE channel_id = ?
+        ORDER BY view_count DESC
+        LIMIT ?
+        """,
+        (channel_id, limit),
     ).fetchall()
 
     return [row["id"] for row in rows]
@@ -242,11 +272,18 @@ def fetch_video_assets(
     conn = get_connection(db_path)
     try:
         candidate_ids = select_candidate_video_ids(conn, keywords, channel_id=channel_id)
+        if not candidate_ids:
+            logger.warning(
+                "キーワードに一致する候補動画が見つかりませんでした。"
+                "チャンネル内の再生数上位動画にフォールバックします。keywords=%s",
+                keywords,
+            )
+            candidate_ids = _select_fallback_video_ids(conn, channel_id=channel_id)
     finally:
         conn.close()
 
     if not candidate_ids:
-        logger.warning("キーワードに一致する候補動画が見つかりませんでした。keywords=%s", keywords)
+        logger.warning("候補動画が1件も見つかりませんでした（チャンネル自体に動画が無い可能性があります）。")
         return []
 
     downloaded: list[Path] = []

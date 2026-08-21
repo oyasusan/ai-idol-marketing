@@ -1,3 +1,4 @@
+import io
 import wave
 from pathlib import Path
 
@@ -5,17 +6,40 @@ import pytest
 from moviepy import ColorClip
 
 
-def _write_silent_wav(path: Path, duration_seconds: float, framerate: int = 44100) -> None:
-    """テスト用の無音WAVファイルを作る（moviepyのAudioClip経由の書き出しは、
-    procedurally生成した無音音声だと長さが正しく書き出されない不具合があるため、
-    標準ライブラリの wave モジュールで直接書き出す）。"""
+def _silent_wav_bytes(duration_seconds: float, framerate: int = 44100) -> bytes:
+    """VOICEVOX ENGINEの `/synthesis` レスポンス相当の無音WAVバイト列を作る。"""
 
+    buffer = io.BytesIO()
     n_frames = int(framerate * duration_seconds)
-    with wave.open(str(path), "w") as f:
+    with wave.open(buffer, "w") as f:
         f.setnchannels(1)
         f.setsampwidth(2)
         f.setframerate(framerate)
         f.writeframes(b"\x00\x00" * n_frames)
+    return buffer.getvalue()
+
+
+class _FakeVoicevoxResponse:
+    def __init__(self, json_data=None, content=b""):
+        self._json_data = json_data
+        self.content = content
+
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return self._json_data
+
+
+def _fake_voicevox_post(duration_seconds: float = 2.0):
+    """`requests.post` の差し替え用フェイク。audio_query/synthesisの2段呼び出しを模擬する。"""
+
+    def fake_post(url, params=None, json=None, timeout=None):
+        if url.endswith("/audio_query"):
+            return _FakeVoicevoxResponse(json_data={"fake": "query"})
+        return _FakeVoicevoxResponse(content=_silent_wav_bytes(duration_seconds))
+
+    return fake_post
 
 from src.video.generator import (
     TARGET_SIZE,
@@ -59,32 +83,20 @@ def test_generate_narration_audio_empty_text_returns_none(tmp_path):
 
 
 def test_generate_narration_audio_success(monkeypatch, tmp_path):
-    class FakeGTTS:
-        def __init__(self, text, lang):
-            self.text = text
-            self.lang = lang
+    monkeypatch.setattr("src.video.generator.requests.post", _fake_voicevox_post())
 
-        def save(self, path):
-            Path(path).write_bytes(b"fake-mp3-data")
-
-    monkeypatch.setattr("src.video.generator.gTTS", FakeGTTS)
-
-    dest = tmp_path / "narration.mp3"
+    dest = tmp_path / "narration.wav"
     result = generate_narration_audio("テストです", dest)
     assert result == dest
     assert dest.exists()
 
 
 def test_generate_narration_audio_handles_exception(monkeypatch, tmp_path):
-    class FailingGTTS:
-        def __init__(self, text, lang):
-            pass
+    def failing_post(*args, **kwargs):
+        raise RuntimeError("connection error")
 
-        def save(self, path):
-            raise RuntimeError("network error")
-
-    monkeypatch.setattr("src.video.generator.gTTS", FailingGTTS)
-    result = generate_narration_audio("テストです", tmp_path / "out.mp3")
+    monkeypatch.setattr("src.video.generator.requests.post", failing_post)
+    result = generate_narration_audio("テストです", tmp_path / "out.wav")
     assert result is None
 
 
@@ -158,7 +170,7 @@ def test_select_bgm_file_picks_from_available_files(tmp_path):
     assert result.name in ("a.mp3", "b.wav")
 
 
-# ---- compose_tiktok_video (End-to-End, gTTSのみモック) ----
+# ---- compose_tiktok_video (End-to-End, VOICEVOX ENGINE呼び出しのみモック) ----
 
 
 def test_compose_tiktok_video_no_clips_returns_none(monkeypatch, tmp_path):
@@ -167,15 +179,9 @@ def test_compose_tiktok_video_no_clips_returns_none(monkeypatch, tmp_path):
 
 
 def test_compose_tiktok_video_end_to_end(monkeypatch, synthetic_clip_paths, tmp_path):
-    class FakeGTTS:
-        def __init__(self, text, lang):
-            pass
-
-        def save(self, path):
-            # 2秒の無音音声を生成して実ファイルとして書き出す（ネットワーク不要）
-            _write_silent_wav(Path(path), duration_seconds=2.0)
-
-    monkeypatch.setattr("src.video.generator.gTTS", FakeGTTS)
+    monkeypatch.setattr(
+        "src.video.generator.requests.post", _fake_voicevox_post(duration_seconds=2.0)
+    )
 
     output_path = tmp_path / "output" / "test_tiktok.mp4"
     result = compose_tiktok_video(
@@ -195,20 +201,17 @@ def test_compose_tiktok_video_end_to_end(monkeypatch, synthetic_clip_paths, tmp_
     produced = VideoFileClip(str(output_path))
     try:
         assert (produced.w, produced.h) == TARGET_SIZE
+        # 動画の尺はナレーション音声(2.0秒)にそのまま合わせる。
         assert produced.duration == pytest.approx(2.0, abs=0.3)
     finally:
         produced.close()
 
 
 def test_compose_tiktok_video_narration_failure_returns_none(monkeypatch, synthetic_clip_paths, tmp_path):
-    class FailingGTTS:
-        def __init__(self, text, lang):
-            pass
+    def failing_post(*args, **kwargs):
+        raise RuntimeError("connection error")
 
-        def save(self, path):
-            raise RuntimeError("network error")
-
-    monkeypatch.setattr("src.video.generator.gTTS", FailingGTTS)
+    monkeypatch.setattr("src.video.generator.requests.post", failing_post)
 
     result = compose_tiktok_video(
         synthetic_clip_paths, "テスト", tmp_path / "out.mp4", work_dir=tmp_path / "work"

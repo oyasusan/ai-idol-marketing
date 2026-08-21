@@ -49,6 +49,19 @@ class Settings(BaseSettings):
     # 動作確認済みの openai/gpt-oss-20b を既定値とする。
     groq_model: str = Field(default="openai/gpt-oss-20b", alias="GROQ_MODEL")
 
+    # 任意: src/video/capcut_draft.py がCapCut Desktopの下書き保存フォルダを
+    # 自動検出できない場合（非標準インストール先、対応外OS等）の明示的な指定先。
+    # 未設定でもOS別の既定パスからの自動検出を試みる。
+    capcut_draft_root: str = Field(default="", alias="CAPCUT_DRAFT_ROOT")
+
+    # src/video/generator.py のナレーション音声合成に使うVOICEVOX ENGINEの接続先。
+    # 事前にローカルでエンジンを起動しておく必要がある
+    # （例: `docker run -p 50021:50021 voicevox/voicevox_engine:cpu-latest`）。
+    voicevox_engine_url: str = Field(default="http://127.0.0.1:50021", alias="VOICEVOX_ENGINE_URL")
+    # 話者ID。既定値2は「四国めたん（ノーマル）」。他の話者IDは起動中のエンジンの
+    # `GET /speakers` で一覧を確認できる（VOICEVOX GUIのキャラクター選択でも確認可）。
+    voicevox_speaker_id: int = Field(default=2, alias="VOICEVOX_SPEAKER_ID")
+
     database_path: Path = DATA_DIR / "database.sqlite"
 
 

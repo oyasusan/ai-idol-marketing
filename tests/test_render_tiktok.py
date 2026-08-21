@@ -49,24 +49,76 @@ def test_render_tiktok_video_rejects_non_tiktok_platform(db_path):
     assert "TikTok" in result["error"]
 
 
-def test_render_tiktok_video_rejects_empty_narration(db_path):
+def test_render_tiktok_video_rejects_empty_narration_when_backfill_fails(monkeypatch, db_path):
     conn = get_connection(db_path)
     content_id = _insert_tiktok_content(conn, narration_text="", search_keywords=["kw"])
     conn.close()
 
+    monkeypatch.setattr(
+        "src.video.render_tiktok.backfill_tiktok_video_fields",
+        lambda *a, **k: {"ok": False, "content_id": content_id, "filled": False, "error": "補完失敗"},
+    )
+
     result = render_tiktok_video(content_id, db_path=db_path)
     assert result["ok"] is False
-    assert "narration_text" in result["error"]
+    assert "補完失敗" in result["error"]
 
 
-def test_render_tiktok_video_rejects_missing_keywords(db_path):
+def test_render_tiktok_video_rejects_missing_keywords_when_backfill_fails(monkeypatch, db_path):
     conn = get_connection(db_path)
     content_id = _insert_tiktok_content(conn, search_keywords=None)
     conn.close()
 
+    monkeypatch.setattr(
+        "src.video.render_tiktok.backfill_tiktok_video_fields",
+        lambda *a, **k: {"ok": False, "content_id": content_id, "filled": False, "error": "補完失敗"},
+    )
+
     result = render_tiktok_video(content_id, db_path=db_path)
     assert result["ok"] is False
-    assert "search_keywords" in result["error"]
+    assert "補完失敗" in result["error"]
+
+
+def test_render_tiktok_video_auto_backfills_missing_fields(monkeypatch, db_path, tmp_path):
+    """narration_text/search_keywordsが欠けているレコードは、backfillで自動補完してから
+    レンダリングを続行する（この2カラム導入前に生成された旧レコード向け）。"""
+
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn, narration_text="", search_keywords=None)
+    conn.close()
+
+    def fake_backfill(cid, db_path=None, **kwargs):
+        fill_conn = get_connection(db_path)
+        fill_conn.execute(
+            "UPDATE generated_contents SET narration_text = ?, search_keywords = ? WHERE id = ?",
+            ("補完されたナレーション", json.dumps(["ライブ"]), cid),
+        )
+        fill_conn.commit()
+        fill_conn.close()
+        return {"ok": True, "content_id": cid, "filled": True, "error": None}
+
+    monkeypatch.setattr("src.video.render_tiktok.backfill_tiktok_video_fields", fake_backfill)
+
+    captured = {}
+
+    def fake_fetch(keywords, dest_dir=None, db_path=None, **kwargs):
+        captured["keywords"] = keywords
+        return [Path("/tmp/clip1.mp4")]
+
+    def fake_compose(clip_paths, narration_text, output_path, bgm_dir=None, **kwargs):
+        captured["narration_text"] = narration_text
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_bytes(b"fake video")
+        return output_path
+
+    monkeypatch.setattr("src.video.render_tiktok.fetch_video_assets", fake_fetch)
+    monkeypatch.setattr("src.video.render_tiktok.compose_tiktok_video", fake_compose)
+
+    result = render_tiktok_video(content_id, db_path=db_path, videos_dir=tmp_path)
+
+    assert result["ok"] is True
+    assert captured["keywords"] == ["ライブ"]
+    assert captured["narration_text"] == "補完されたナレーション"
 
 
 def test_render_tiktok_video_fetch_failure_returns_error(monkeypatch, db_path):
@@ -161,3 +213,131 @@ def test_cli_main_success(monkeypatch, db_path, tmp_path, capsys):
 def test_cli_main_failure_exits_nonzero(db_path):
     exit_code = main(["--content-id", "9999", "--db-path", str(db_path)])
     assert exit_code == 1
+
+
+# ---- target=capcut ----
+
+
+def test_render_tiktok_video_capcut_target_success(monkeypatch, db_path, tmp_path):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(
+        conn, narration_text="ナレーションテキスト", search_keywords=["ライブ"]
+    )
+    conn.close()
+
+    captured = {}
+
+    def fake_fetch(keywords, dest_dir=None, db_path=None, **kwargs):
+        return [Path("/tmp/clip.mp4")]
+
+    def fake_generate_narration(text, dest_path, **kwargs):
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+        dest_path.write_bytes(b"fake narration")
+        return dest_path
+
+    def fake_build_capcut_draft(content_id, clip_paths, narration_path, narration_text, **kwargs):
+        captured["clip_paths"] = clip_paths
+        captured["narration_path"] = narration_path
+        captured["narration_text"] = narration_text
+        draft_path = tmp_path / f"draft_{content_id}"
+        draft_path.mkdir(parents=True, exist_ok=True)
+        return {
+            "ok": True,
+            "content_id": content_id,
+            "draft_path": str(draft_path),
+            "draft_name": draft_path.name,
+            "error": None,
+        }
+
+    monkeypatch.setattr("src.video.render_tiktok.fetch_video_assets", fake_fetch)
+    monkeypatch.setattr(
+        "src.video.render_tiktok.generate_narration_audio", fake_generate_narration
+    )
+    monkeypatch.setattr("src.video.render_tiktok.build_capcut_draft", fake_build_capcut_draft)
+
+    result = render_tiktok_video(
+        content_id, db_path=db_path, target="capcut", narration_dir=tmp_path
+    )
+
+    assert result["ok"] is True
+    assert result["output_path"] is None
+    assert result["draft_path"] is not None
+    assert captured["narration_text"] == "ナレーションテキスト"
+    assert captured["clip_paths"] == [Path("/tmp/clip.mp4")]
+
+
+def test_render_tiktok_video_capcut_target_draft_failure_returns_error(
+    monkeypatch, db_path, tmp_path
+):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn, search_keywords=["ライブ"])
+    conn.close()
+
+    monkeypatch.setattr(
+        "src.video.render_tiktok.fetch_video_assets", lambda *a, **k: [Path("/tmp/clip.mp4")]
+    )
+    monkeypatch.setattr(
+        "src.video.render_tiktok.generate_narration_audio",
+        lambda text, dest_path, **k: dest_path,
+    )
+    monkeypatch.setattr(
+        "src.video.render_tiktok.build_capcut_draft",
+        lambda *a, **k: {
+            "ok": False,
+            "content_id": content_id,
+            "draft_path": None,
+            "draft_name": None,
+            "error": "CapCut下書きの生成に失敗しました。",
+        },
+    )
+
+    result = render_tiktok_video(
+        content_id, db_path=db_path, target="capcut", narration_dir=tmp_path
+    )
+    assert result["ok"] is False
+    assert "CapCut" in result["error"]
+
+
+def test_render_tiktok_video_rejects_invalid_target(db_path):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn, search_keywords=["ライブ"])
+    conn.close()
+
+    result = render_tiktok_video(content_id, db_path=db_path, target="invalid")
+    assert result["ok"] is False
+    assert "target" in result["error"]
+
+
+def test_cli_main_capcut_target_success(monkeypatch, db_path, tmp_path, capsys):
+    conn = get_connection(db_path)
+    content_id = _insert_tiktok_content(conn, search_keywords=["ライブ"])
+    conn.close()
+
+    monkeypatch.setattr(
+        "src.video.render_tiktok.fetch_video_assets", lambda *a, **k: [Path("/tmp/clip.mp4")]
+    )
+    monkeypatch.setattr(
+        "src.video.render_tiktok.generate_narration_audio",
+        lambda text, dest_path, **k: dest_path,
+    )
+    monkeypatch.setattr(
+        "src.video.render_tiktok.build_capcut_draft",
+        lambda *a, **k: {
+            "ok": True,
+            "content_id": content_id,
+            "draft_path": str(tmp_path / "draft"),
+            "draft_name": "draft",
+            "error": None,
+        },
+    )
+    monkeypatch.setattr("src.video.render_tiktok.NARRATION_DIR", tmp_path)
+
+    exit_code = main(
+        ["--content-id", str(content_id), "--db-path", str(db_path), "--target", "capcut"]
+    )
+    assert exit_code == 0
+
+    captured = capsys.readouterr()
+    output_json = json.loads(captured.out)
+    assert output_json["ok"] is True
+    assert output_json["draft_path"] is not None
