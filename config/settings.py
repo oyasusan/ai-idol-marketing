@@ -58,9 +58,9 @@ class Settings(BaseSettings):
     # 事前にローカルでエンジンを起動しておく必要がある
     # （例: `docker run -p 50021:50021 voicevox/voicevox_engine:cpu-latest`）。
     voicevox_engine_url: str = Field(default="http://127.0.0.1:50021", alias="VOICEVOX_ENGINE_URL")
-    # 話者ID。既定値2は「四国めたん（ノーマル）」。他の話者IDは起動中のエンジンの
+    # 話者ID。既定値53は「麒ヶ島宗麟（ノーマル）」。他の話者IDは起動中のエンジンの
     # `GET /speakers` で一覧を確認できる（VOICEVOX GUIのキャラクター選択でも確認可）。
-    voicevox_speaker_id: int = Field(default=2, alias="VOICEVOX_SPEAKER_ID")
+    voicevox_speaker_id: int = Field(default=53, alias="VOICEVOX_SPEAKER_ID")
 
     database_path: Path = DATA_DIR / "database.sqlite"
 
