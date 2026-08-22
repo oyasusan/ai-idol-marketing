@@ -9,6 +9,8 @@
 #    未起動ならDockerコンテナを起動して準備が整うまで待つ。
 # 3. venv/ があれば有効化する。
 # 4. src/video/render_tiktok.py --content-id <ID> を実行する。
+# 5. mp4が生成された場合（--target render）、rcloneでGoogle Drive
+#    (gdrive:TikTokVideos/) に自動アップロードする（スマホでの編集用）。
 #
 # 使い方:
 #   ./scripts/run_tiktok.sh <content_id> [--target render|capcut] [その他 render_tiktok.py のオプション]
@@ -35,6 +37,12 @@ fi
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+# data/database.sqlite はバイナリのため通常のgitマージでは3-way差分を取れない。
+# .gitattributes が参照する merge=sqlite3merge の実体（.git/config はリポジトリ
+# 間で共有されないため）をここで毎回冪等に登録し、行単位の自動マージを有効にする。
+git config merge.sqlite3merge.name "SQLite row-level 3-way merge (generated_contents等)" 2>/dev/null || true
+git config merge.sqlite3merge.driver "python3 \"${PROJECT_ROOT}/scripts/git_merge_sqlite.py\" %O %A %B" 2>/dev/null || true
+
 echo "ローカルのdata/database.sqlite等がGitHub(origin)上の最新コミットと"
 echo "ズレていないか確認します..."
 
@@ -58,8 +66,15 @@ else
             exit 1
         fi
     else
-        echo "警告: ローカルブランチがoriginと分岐しているため、自動pullをスキップします。" >&2
-        echo "       手動で状況を確認してください（古いDBのまま続行します）。" >&2
+        echo "ローカルブランチとoriginが分岐しているため、自動マージで取り込みます..."
+        echo "（data/database.sqliteはmerge=sqlite3merge（行単位の3-wayマージ）で自動解決されます）"
+        if ! git merge --no-edit -m "Merge origin/${CURRENT_BRANCH} (auto, run_tiktok.sh DB同期)" "origin/${CURRENT_BRANCH}"; then
+            echo "エラー: 自動マージに失敗しました" \
+                 "（data/database.sqlite以外のファイルで解決不能な競合がある可能性があります）。" >&2
+            echo "       手動でご確認ください（git status で競合ファイルを確認できます）。" >&2
+            exit 1
+        fi
+        echo "自動マージが完了しました。"
     fi
 fi
 
@@ -131,4 +146,23 @@ if [ -f "venv/bin/activate" ]; then
 fi
 
 echo "TikTok動画生成を開始します: content_id=${CONTENT_ID}"
-python src/video/render_tiktok.py --content-id "$CONTENT_ID" "$@"
+RESULT_JSON="$(python src/video/render_tiktok.py --content-id "$CONTENT_ID" "$@")"
+echo "$RESULT_JSON"
+
+GDRIVE_UPLOAD_DIR="TikTokVideos"
+OUTPUT_PATH="$(printf '%s' "$RESULT_JSON" | python3 -c 'import json, sys
+try:
+    print(json.load(sys.stdin).get("output_path") or "")
+except Exception:
+    print("")')"
+
+if [ -n "$OUTPUT_PATH" ]; then
+    echo "生成した動画をGoogle Drive (gdrive:${GDRIVE_UPLOAD_DIR}/) にアップロードします..."
+    if ! command -v rclone >/dev/null 2>&1; then
+        echo "警告: rcloneが見つからないため、Google Driveへのアップロードをスキップしました。" >&2
+    elif rclone copy "$OUTPUT_PATH" "gdrive:${GDRIVE_UPLOAD_DIR}/"; then
+        echo "アップロード完了: gdrive:${GDRIVE_UPLOAD_DIR}/$(basename "$OUTPUT_PATH")"
+    else
+        echo "警告: Google Driveへのアップロードに失敗しました（動画自体はローカルに生成済みです）。" >&2
+    fi
+fi
